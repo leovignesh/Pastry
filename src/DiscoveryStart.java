@@ -34,16 +34,15 @@ public class DiscoveryStart {
         while (true) {
 
             try {
+                System.out.println("Server Started....");
                 socket = serverSocket.accept();
             }catch (IOException e){
                 e.printStackTrace();
                 System.out.println("Exception occured when starting accepting the server.");
             }
 
-            System.out.println("Server Started....");
-
             Discovery discovery = new Discovery(socket);
-            Thread thread =new Thread();
+            Thread thread =new Thread(discovery);
             thread.start();
 
         }

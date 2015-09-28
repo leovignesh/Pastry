@@ -1,4 +1,7 @@
 import javax.xml.soap.Node;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.*;
 
@@ -35,30 +38,65 @@ public class RegisterNode implements  Runnable{
         if(discovery.nodeDetails.size()==0){
             System.out.println("First Node in the system.Cannot return any ipaddress");
             messToSend="REGSUCCESS 0";
+            discovery.nodeDetails.put(ipAddress,nodeDetails);
+            discovery.allIdentifier.add(identifier);
+
         }else{
 
-            if(discovery.nodeDetails.get(ipAddress).getIpAddress() !=null){
+            if(discovery.nodeDetails.get(ipAddress) !=null){
                 System.out.println("Already registerd. Unregister first and then register.");
                 messToSend = "UNREGFIRST ";
             }else {
 
                 // Check if the identifier is present for other Ip address.
-                if (discovery.nodeDetails.get(ipAddress).getIdentifier() != null) {
+                if (discovery.allIdentifier.contains(identifier)) {
 
+                    System.out.println("ID already present.");
                     messToSend = "IDCLASH ";
                 } else {
 
                     messToSend = "REGSUCCESS 1 " + discovery.getRandomIpDetails(1);
-
+                    discovery.nodeDetails.put(ipAddress,nodeDetails);
                 }
             }
         }
-        discovery.nodeDetails.put(ipAddress,nodeDetails);
+
 
         // send to the Node that requested.
+        sendDataToDestination(socket,messToSend);
 
 
+    }
 
+    private void sendDataToDestination(Socket socket,String messageToSend){
+
+        try {
+            int messageLength = messageToSend.trim().length();
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeInt(messageLength);
+            dataOutputStream.write(messageToSend.getBytes(), 0, messageLength);
+            dataOutputStream.flush();
+        } catch (IOException e){
+            System.out.println("Exception occurred when trying to send data to Destination");
+            e.printStackTrace();
+        }
+    }
+
+    private String receiveDataFromDestination(Socket socket){
+
+        byte[] data = null;
+        try {
+            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            int messageLength = dataInputStream.readInt();
+            System.out.println(messageLength);
+            data = new byte[messageLength];
+            dataInputStream.readFully(data, 0, messageLength);
+        }catch (IOException e){
+            System.out.println("Exception occured when trying to read message from Input stream");
+            e.printStackTrace();
+        }
+
+        return new String(data);
     }
 
 }

@@ -2,10 +2,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -16,10 +13,10 @@ public class Discovery implements Runnable{
     private Socket socket;
 
     public static Map<String, NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
+    public static Set<String> allIdentifier = new HashSet<String>();
 
     public Discovery(Socket socket){
         this.socket = socket;
-
     }
 
 
@@ -114,7 +111,7 @@ public class Discovery implements Runnable{
 
 
     private String getCurrentTime(){
-        return new Timestamp(System.currentTimeMillis()).toString().replace(" ","_");
+        return new Timestamp(System.currentTimeMillis()).toString();
     }
 
 }
