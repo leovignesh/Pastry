@@ -184,6 +184,26 @@ public class NodeMain {
         return strBuf.toString();
     }
 
+    /**
+     * This method converts a specified hexadecimal String into a set of bytes.
+     *
+     * @param hexString
+     * @return
+     */
+    public byte[] convertHexToBytes(String hexString) {
+        int size = hexString.length();
+        byte[] buf = new byte[size / 2];
+        int j = 0;
+        for (int i = 0; i < size; i++) {
+            String a = hexString.substring(i, i + 2);
+            int valA = Integer.parseInt(a, 16);
+            i++;
+            buf[j] = (byte) valA;
+            j++;
+        }
+        return buf;
+    }
+
     public String getNodeIdentifier(){
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
