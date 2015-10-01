@@ -1,3 +1,6 @@
+import org.apache.log4j.Logger;
+
+import javax.xml.soap.Node;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -23,6 +26,7 @@ public class NodeMain {
     private ServerSocket serverSocket;
     private Socket socket;
     private Socket clientSocket;
+    Logger log = Logger.getLogger(NodeMain.class);
 
 
     public NodeMain(int selfPort){
@@ -116,6 +120,7 @@ public class NodeMain {
             String messToSend = "REG " + selfIP + " " + selfPort + " " + nickName + " " + identifier;
 
             System.out.println("Message to send to discovery node " + messToSend);
+            log.info("Message to send to discovery Node : "+messToSend);
 
             try {
                 sendDataToDestination(discoverSocket, messToSend);
