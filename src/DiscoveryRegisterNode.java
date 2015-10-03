@@ -6,7 +6,7 @@ import java.net.Socket;
 /**
  * Created by leo on 9/26/15.
  */
-public class RegisterNode implements  Runnable{
+public class DiscoveryRegisterNode implements  Runnable{
 
     private Socket socket;
     private String ipAddress;
@@ -15,7 +15,7 @@ public class RegisterNode implements  Runnable{
     private String nickName;
     private String identifier;
 
-    public RegisterNode(Socket socket,Discovery discovery,String ipAddress,int port,String nickName,String identifier) {
+    public DiscoveryRegisterNode(Socket socket, Discovery discovery, String ipAddress, int port, String nickName, String identifier) {
 
         this.socket = socket;
         this.ipAddress = ipAddress;
@@ -30,13 +30,13 @@ public class RegisterNode implements  Runnable{
     public void run() {
 
         // Register a new Node
-        NodeDetails nodeDetails = new NodeDetails(ipAddress,port,nickName,identifier);
+        DiscoveryNodeDetails discoveryNodeDetails = new DiscoveryNodeDetails(ipAddress,port,nickName,identifier);
         String messToSend =null;
 
         if(discovery.nodeDetails.size()==0){
             System.out.println("First Node in the system.Cannot return any ipaddress");
             messToSend="REGSUCCESS 0";
-            discovery.nodeDetails.put(ipAddress,nodeDetails);
+            discovery.nodeDetails.put(ipAddress, discoveryNodeDetails);
             discovery.allIdentifier.add(identifier);
 
         }else{
@@ -54,7 +54,7 @@ public class RegisterNode implements  Runnable{
                 } else {
 
                     messToSend = "REGSUCCESS 1 " + discovery.getRandomIpDetails(1);
-                    discovery.nodeDetails.put(ipAddress,nodeDetails);
+                    discovery.nodeDetails.put(ipAddress, discoveryNodeDetails);
                     discovery.allIdentifier.add(identifier);
                 }
             }

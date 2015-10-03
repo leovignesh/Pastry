@@ -2,14 +2,14 @@
 /**
  * Created by leo on 9/26/15.
  */
-public class NodeDetails {
+public class DiscoveryNodeDetails {
 
     private String ipAddress;
     private int port;
     private String nickName;
     private String identifier;
 
-    public NodeDetails(String ipAddress,int port,String nickName,String identifier) {
+    public DiscoveryNodeDetails(String ipAddress, int port, String nickName, String identifier) {
 
         this.ipAddress = ipAddress;
         this.port = port;

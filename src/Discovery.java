@@ -12,7 +12,7 @@ public class Discovery implements Runnable{
 
     private Socket socket;
 
-    public static Map<String, NodeDetails> nodeDetails = new ConcurrentHashMap<String,NodeDetails>();
+    public static Map<String, DiscoveryNodeDetails> nodeDetails = new ConcurrentHashMap<String, DiscoveryNodeDetails>();
     public static Set<String> allIdentifier = new HashSet<String>();
 
     public Discovery(Socket socket){
@@ -48,8 +48,8 @@ public class Discovery implements Runnable{
             String identifier=tokens[4].trim();
 
 
-            RegisterNode registerNode = new RegisterNode(socket,this,ipAddress,port,nickName,identifier);
-            Thread thread = new Thread(registerNode);
+            DiscoveryRegisterNode discoveryRegisterNode = new DiscoveryRegisterNode(socket,this,ipAddress,port,nickName,identifier);
+            Thread thread = new Thread(discoveryRegisterNode);
             thread.start();
 
         }else if(requestType.equals("UNREG")){
@@ -67,16 +67,16 @@ public class Discovery implements Runnable{
 
     public String getRandomIpDetails(int numberOfIps){
 
-        List<NodeDetails> nodesList= new ArrayList<NodeDetails>(nodeDetails.values());
+        List<DiscoveryNodeDetails> nodesList= new ArrayList<DiscoveryNodeDetails>(nodeDetails.values());
 
         // Sort it
         Collections.shuffle(nodesList);
-        NodeDetails[] nodeDetail = nodesList.subList(0,numberOfIps).toArray(new NodeDetails[numberOfIps]);
+        DiscoveryNodeDetails[] nodeDetail = nodesList.subList(0,numberOfIps).toArray(new DiscoveryNodeDetails[numberOfIps]);
 
         String messageToSend="";
         for(int i=0;i<nodeDetail.length;i++){
             System.out.println("NOde details IPAddress : "+nodeDetail[i].getIpAddress()+" Port : "+nodeDetail[i].getPort()+" Nick Name :"+nodeDetail[i].getNickName());
-            messageToSend = messageToSend+nodeDetail[i].getIpAddress()+":"+nodeDetail[i].getPort()+","+nodeDetail[i].getNickName()+" ";
+            messageToSend = messageToSend+nodeDetail[i].getIpAddress()+":"+nodeDetail[i].getPort()+","+nodeDetail[i].getNickName()+" "+nodeDetail[i].getIdentifier();
         }
 
         return messageToSend.trim();

@@ -1,6 +1,5 @@
 import org.apache.log4j.Logger;
 
-import javax.xml.soap.Node;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -17,17 +16,33 @@ import java.util.Date;
  */
 public class NodeMain {
 
+    // self Node details
     private static int selfPort;
     private static String selfIP;
-    private static String nickName;
+    private static String selfIdentifier=null;
+    private static String selfnickName;
+
+    // Random Node details
+    private static int randomNodePort;
+    private static String randomNodeIP;
+    private static String randomNodeIdentifier;
+    private static String randomNodeNickName;
+    private static int randomNodeID=0;
+
+    // Discovery Node details
     private static String discoverIP;
     private static int discoverPort;
-    private static String identifier=null;
 
+    // Socket details
     private ServerSocket serverSocket;
     private Socket socket;
     private Socket clientSocket;
+
+    // Logger Initialization
     Logger log = Logger.getLogger(NodeMain.class);
+
+    // Datastructues
+
 
 
     public NodeMain(int selfPort){
@@ -35,9 +50,9 @@ public class NodeMain {
 
         try {
             selfIP = InetAddress.getLocalHost().getHostAddress();
-            nickName = InetAddress.getLocalHost().getHostName();
+            selfnickName = InetAddress.getLocalHost().getHostName();
         } catch (UnknownHostException e) {
-            System.out.println("Exception occured when tyring to get the host address.");
+            log.error("Exception occured when tyring to get the host address.");
             e.printStackTrace();
         }
 
@@ -45,7 +60,7 @@ public class NodeMain {
         try {
             serverSocket = new ServerSocket(selfPort);
         }catch (IOException e){
-            System.out.println("Exception occured when trying to start server");
+            log.error("Exception occured when trying to start server");
             e.printStackTrace();
         }
 
@@ -58,18 +73,21 @@ public class NodeMain {
 
         if(regSuccess) {
 
+            NodeLeafSet nodeLeafSet = new NodeLeafSet();
+
             System.out.println("Node registration successful. Start the server to accept the requests.");
+
             while (true) {
                 try {
                     socket = serverSocket.accept();
                     System.out.println("Node server started...");
                 } catch (IOException e) {
-                    System.out.println("Exception occured when trying to accept connections");
+                    log.error("Exception occured when trying to accept connections");
                     e.printStackTrace();
                 }
             }
         }else{
-            System.out.println("Cannot start the Node. Exception occured when trying to connect to Discovery node.");
+            log.error("Cannot start the Node. Exception occured when trying to connect to Discovery node.");
         }
 
     }
@@ -85,9 +103,8 @@ public class NodeMain {
         discoverIP = args[1].trim();
         discoverPort = Integer.parseInt(args[2].trim());
 
-        System.out.println("args length "+args.length);
         if(args.length==4){
-            identifier = args[3].trim();
+            selfIdentifier = args[3].trim();
         }
 
         NodeMain nodeMain = new NodeMain(Integer.parseInt(args[0].trim()));
@@ -104,33 +121,26 @@ public class NodeMain {
         String[] messTokens = null;
         boolean regSuccess = false;
 
-        int tempint =0;
-
 
         while(!regSuccess) {
 
             try {
                 discoverSocket = getSocket(discoverIP,discoverPort);
             } catch (IOException e) {
-                System.out.println("Cannot connect to discovery Node.");
+                log.error("Cannot connect to discovery Node.");
                 return regSuccess;
                 //e.printStackTrace();
             }
 
 
-            if(identifier==null){
-                identifier = getNodeIdentifier();
+            if(selfIdentifier==null){
+                selfIdentifier = getNodeIdentifier();
             }
 
-            System.out.println("Identifier is "+identifier);
+            log.info("Identifier is " + selfIdentifier);
 
-            /*if(tempint==0){
-                identifier="1234";
-            }*/
+            String messToSend = "REG " + selfIP + " " + selfPort + " " + selfnickName + " " + selfIdentifier;
 
-            String messToSend = "REG " + selfIP + " " + selfPort + " " + nickName + " " + identifier;
-
-            System.out.println("Message to send to discovery node " + messToSend);
             log.info("Message to send to discovery Node : "+messToSend);
 
             try {
@@ -138,7 +148,7 @@ public class NodeMain {
                 messRcvd = receiveDataFromDestination(discoverSocket);
 
             }catch (Exception e){
-                System.out.println("Exception occured when trying to send message to discovery node");
+                log.error("Exception occured when trying to send message to discovery node");
                 //e.printStackTrace();
                 break;
             }finally {
@@ -150,22 +160,31 @@ public class NodeMain {
                 }
             }
 
-            System.out.println("Message REceived : " + messRcvd);
+            log.info("Message Received : " + messRcvd);
 
             messTokens = messRcvd.split(" ");
             requestType = messTokens[0].trim();
             System.out.println("Request type :"+requestType);
 
             if (requestType.equals("UNREGFIRST")) {
-                System.out.println("Already the server is connected. First unregister and then register.");
+                log.info("Already the server is connected. First unregister and then register.");
                 break;
             } else if (requestType.equals("IDCLASH")) {
-                System.out.println("Already some other node has generated this id. Please use a different id.");
-                tempint++;
+                log.info("Already some other node has generated this id. Please use a different id.");
                 break;
             }else if(requestType.equals("REGSUCCESS")){
+
                 regSuccess = true;
-                System.out.println("Registration successful. come out of loop.");
+                randomNodeID = Integer.parseInt(messTokens[1].trim());
+                if(randomNodeID!=0){
+                    randomNodeIP = messTokens[1].trim().split(":")[0];
+                    randomNodePort = Integer.parseInt(messTokens[1].trim().split(":")[1]);
+                    randomNodeNickName = messTokens[2].trim();
+                    randomNodeIdentifier = messTokens[3].trim();
+
+                }
+
+                log.info("Registration successful. come out of loop.");
                 break;
             }
 
