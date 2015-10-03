@@ -42,18 +42,10 @@ public class Discovery implements Runnable{
 
         if(requestType.equals("REG")){
 
-            String identifier=null;
             String ipAddress = tokens[1].trim();
             int port = Integer.parseInt(tokens[2].trim());
             String nickName = tokens[3].trim();
-
-            if(tokens[4].trim()!=null){
-                identifier=tokens[4];
-
-            }else{
-                String timeNow = getCurrentTime();
-                identifier = convertBytesToHex(timeNow.getBytes());
-            }
+            String identifier=tokens[4].trim();
 
 
             RegisterNode registerNode = new RegisterNode(socket,this,ipAddress,port,nickName,identifier);

@@ -1,9 +1,7 @@
-import javax.xml.soap.Node;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.*;
 
 /**
  * Created by leo on 9/26/15.
@@ -57,6 +55,7 @@ public class RegisterNode implements  Runnable{
 
                     messToSend = "REGSUCCESS 1 " + discovery.getRandomIpDetails(1);
                     discovery.nodeDetails.put(ipAddress,nodeDetails);
+                    discovery.allIdentifier.add(identifier);
                 }
             }
         }

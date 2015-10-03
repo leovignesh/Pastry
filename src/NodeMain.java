@@ -22,6 +22,7 @@ public class NodeMain {
     private static String nickName;
     private static String discoverIP;
     private static int discoverPort;
+    private static String identifier=null;
 
     private ServerSocket serverSocket;
     private Socket socket;
@@ -76,12 +77,18 @@ public class NodeMain {
 
     public static void main(String[] args) {
 
-        if(args.length != 3){
+        /*if(args.length != 3){
             throw new IllegalArgumentException("Parameter(s): <Self Port> <Discovery Node IP> <Discovery Node Port>" );
-        }
+        }*/
+        System.out.println("Parameter(s): <Self Port> <Discovery Node IP> <Discovery Node Port> <HEX ID optional>");
 
         discoverIP = args[1].trim();
         discoverPort = Integer.parseInt(args[2].trim());
+
+        System.out.println("args length "+args.length);
+        if(args.length==4){
+            identifier = args[3].trim();
+        }
 
         NodeMain nodeMain = new NodeMain(Integer.parseInt(args[0].trim()));
         nodeMain.startNode();
@@ -110,8 +117,12 @@ public class NodeMain {
                 //e.printStackTrace();
             }
 
-            String identifier = getNodeIdentifier();
-            System.out.println("Identifier : "+identifier);
+
+            if(identifier==null){
+                identifier = getNodeIdentifier();
+            }
+
+            System.out.println("Identifier is "+identifier);
 
             /*if(tempint==0){
                 identifier="1234";
@@ -151,7 +162,7 @@ public class NodeMain {
             } else if (requestType.equals("IDCLASH")) {
                 System.out.println("Already some other node has generated this id. Please use a different id.");
                 tempint++;
-                continue;
+                break;
             }else if(requestType.equals("REGSUCCESS")){
                 regSuccess = true;
                 System.out.println("Registration successful. come out of loop.");
