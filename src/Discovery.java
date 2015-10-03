@@ -76,7 +76,7 @@ public class Discovery implements Runnable{
         String messageToSend="";
         for(int i=0;i<nodeDetail.length;i++){
             System.out.println("NOde details IPAddress : "+nodeDetail[i].getIpAddress()+" Port : "+nodeDetail[i].getPort()+" Nick Name :"+nodeDetail[i].getNickName());
-            messageToSend = messageToSend+nodeDetail[i].getIpAddress()+":"+nodeDetail[i].getPort()+","+nodeDetail[i].getNickName()+" "+nodeDetail[i].getIdentifier();
+            messageToSend = messageToSend+nodeDetail[i].getIpAddress()+":"+nodeDetail[i].getPort()+" "+nodeDetail[i].getNickName()+" "+nodeDetail[i].getIdentifier();
         }
 
         return messageToSend.trim();

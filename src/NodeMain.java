@@ -9,7 +9,8 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by leo on 9/27/15.
@@ -42,6 +43,12 @@ public class NodeMain {
     Logger log = Logger.getLogger(NodeMain.class);
 
     // Datastructues
+    public static Map<Integer,ArrayList<NodeDetails>> routingTable = new ConcurrentHashMap<Integer,ArrayList<NodeDetails>>();
+
+
+    // Leafset
+    public String leafLeft = null;
+    public String leafRight = null;
 
 
 
@@ -73,9 +80,42 @@ public class NodeMain {
 
         if(regSuccess) {
 
-            NodeLeafSet nodeLeafSet = new NodeLeafSet();
+            // Build routing table
+            NodeDetails nodeDetails = new NodeDetails(selfIP,selfPort,selfIdentifier,selfnickName);
 
-            System.out.println("Node registration successful. Start the server to accept the requests.");
+            InitialRoutingTable route = new InitialRoutingTable(nodeDetails,this);
+            route.buildInitialRoutingTable();
+
+            // display routing table
+
+            Set<Integer> routingTableKey = routingTable.keySet();
+            Iterator itr = routingTableKey.iterator();
+
+            while(itr.hasNext()){
+                int index = (Integer)itr.next();
+                log.info("Routing table row "+index);
+
+                int entries = routingTable.get(index).size();
+                log.info("entries "+entries);
+
+                for(int i=0;i<entries;i++){
+
+                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getIpAddress());
+                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getPort());
+                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getIdentifier());
+                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getNickName());
+                }
+
+                System.out.println("***********\n");
+
+            }
+
+
+            System.out.println("Node registration successful. Join the overlay.");
+
+            JoinOverlay joinOverlay = new JoinOverlay(randomNodeIP,randomNodePort,randomNodeIdentifier);
+            Thread thread = new Thread(joinOverlay);
+            thread.start();
 
             while (true) {
                 try {
@@ -90,6 +130,25 @@ public class NodeMain {
             log.error("Cannot start the Node. Exception occured when trying to connect to Discovery node.");
         }
 
+    }
+
+
+    public void buildLeafSet(){
+        if(randomNodeID==0){
+            log.info("First node so no leafset");
+        }else{
+            log.info("Build the leaf set ");
+
+            if(leafLeft!=null && leafRight!=null){
+
+            }else {
+                log.info("");
+
+            }
+
+
+
+        }
     }
 
 
@@ -177,10 +236,10 @@ public class NodeMain {
                 regSuccess = true;
                 randomNodeID = Integer.parseInt(messTokens[1].trim());
                 if(randomNodeID!=0){
-                    randomNodeIP = messTokens[1].trim().split(":")[0];
-                    randomNodePort = Integer.parseInt(messTokens[1].trim().split(":")[1]);
-                    randomNodeNickName = messTokens[2].trim();
-                    randomNodeIdentifier = messTokens[3].trim();
+                    randomNodeIP = messTokens[2].trim().split(":")[0];
+                    randomNodePort = Integer.parseInt(messTokens[2].trim().split(":")[1]);
+                    randomNodeNickName = messTokens[3].trim();
+                    randomNodeIdentifier = messTokens[4].trim();
 
                 }
 
