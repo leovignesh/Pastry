@@ -1,7 +1,9 @@
+import java.io.Serializable;
+
 /**
  * Created by leo on 10/3/15.
  */
-public class NodeDetails {
+public class NodeDetails implements Serializable{
 
     private String identifier;
     private String ipAddress;

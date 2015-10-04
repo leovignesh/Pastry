@@ -28,7 +28,7 @@ public class NodeMain {
     private static String randomNodeIP;
     private static String randomNodeIdentifier;
     private static String randomNodeNickName;
-    private static int randomNodeID=0;
+    public static int randomNodeID=0;
 
     // Discovery Node details
     private static String discoverIP;
@@ -102,7 +102,6 @@ public class NodeMain {
                 Thread thread = new Thread(joinOverlay);
                 thread.start();
             }else{
-
 
 
             }
@@ -230,6 +229,9 @@ public class NodeMain {
 
                 regSuccess = true;
                 randomNodeID = Integer.parseInt(messTokens[1].trim());
+
+                log.info("random id received : "+randomNodeID);
+
                 if(randomNodeID!=0){
                     randomNodeIP = messTokens[2].trim().split(":")[0];
                     randomNodePort = Integer.parseInt(messTokens[2].trim().split(":")[1]);
