@@ -10,19 +10,24 @@ import java.net.Socket;
  */
 public class JoinOverlay implements  Runnable{
 
-    private String ipAddress;
-    private int port;
-    private String identifier;
+    private String peerIPAddress;
+    private int peerPort;
+    private String peerNickName;
+    private String peerIdentifier;
+    private NodeDetails selfNodeDetails;
+
 
     private Socket peerSocket;
 
     // Logger Initialization
     Logger log = Logger.getLogger(NodeMain.class);
 
-    public JoinOverlay(String ipAddress, int port,String identifier){
-        this.ipAddress = ipAddress;
-        this.port = port;
-        this.identifier = identifier;
+    public JoinOverlay(NodeDetails selfNodeDetails ,String peerIPAddress, int peerPort,String peerNickName,String peerIdentifier){
+        this.selfNodeDetails = selfNodeDetails;
+        this.peerIPAddress = peerIPAddress;
+        this.peerPort = peerPort;
+        this.peerNickName = peerNickName;
+        this.peerIdentifier = peerIdentifier;
     }
 
     @Override
@@ -33,12 +38,19 @@ public class JoinOverlay implements  Runnable{
     public void sendJoinMessage(){
 
         try {
-            peerSocket = getSocket(ipAddress, port);
+            peerSocket = getSocket(peerIPAddress, peerPort);
         }catch (IOException e){
+            e.printStackTrace();
             log.error("Exception occured when trying to get peer socket.");
         }
 
-        //String messToSend = "JOIN 0 "+
+        String messToSend = "JOIN 0 "+selfNodeDetails.getIpAddress()+" "+selfNodeDetails.getPort()+" "+selfNodeDetails.getNickName()+" "+selfNodeDetails.getIdentifier();
+        try {
+            sendDataToDestination(peerSocket,messToSend);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("Exception occured when trying to send JOIN message to Peer.");
+        }
 
     }
 

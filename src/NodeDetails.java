@@ -8,10 +8,27 @@ public class NodeDetails {
     private int port;
     private String nickName;
 
+
     public NodeDetails(String ipAddress,int port,String identifier,String nickName){
         this.identifier = identifier;
         this.ipAddress = ipAddress;
         this.port = port;
+        this.nickName = nickName;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public void setNickName(String nickName) {
         this.nickName = nickName;
     }
 

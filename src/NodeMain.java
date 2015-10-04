@@ -47,8 +47,8 @@ public class NodeMain {
 
 
     // Leafset
-    public String leafLeft = null;
-    public String leafRight = null;
+    public NodeDetails leafLeft = null;
+    public NodeDetails leafRight = null;
 
 
 
@@ -81,46 +81,41 @@ public class NodeMain {
         if(regSuccess) {
 
             // Build routing table
-            NodeDetails nodeDetails = new NodeDetails(selfIP,selfPort,selfIdentifier,selfnickName);
+            NodeDetails selfnodeDetails = new NodeDetails(selfIP,selfPort,selfIdentifier,selfnickName);
 
-            InitialRoutingTable route = new InitialRoutingTable(nodeDetails,this);
-            route.buildInitialRoutingTable();
+            InitialRoutingTable selfRoute = new InitialRoutingTable(selfnodeDetails,this);
+            selfRoute.buildInitialRoutingTable();
 
-            // display routing table
 
-            Set<Integer> routingTableKey = routingTable.keySet();
-            Iterator itr = routingTableKey.iterator();
+             // Start the client for giving input
+            NodeClient nodeClient = new NodeClient(this);
+            Thread threadClient = new Thread(nodeClient);
+            threadClient.start();
 
-            while(itr.hasNext()){
-                int index = (Integer)itr.next();
-                log.info("Routing table row "+index);
 
-                int entries = routingTable.get(index).size();
-                log.info("entries "+entries);
 
-                for(int i=0;i<entries;i++){
+            System.out.println("Node registration successful. Join the overlay if you are not the first Node.");
 
-                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getIpAddress());
-                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getPort());
-                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getIdentifier());
-                    System.out.println("Row : "+index+" column "+i+" value : "+routingTable.get(index).get(i).getNickName());
-                }
+            // Join the overlay if you are not the first guy.
+            if(randomNodeID!=0) {
+                JoinOverlay joinOverlay = new JoinOverlay(selfnodeDetails, randomNodeIP, randomNodePort, randomNodeNickName,randomNodeIdentifier);
+                Thread thread = new Thread(joinOverlay);
+                thread.start();
+            }else{
 
-                System.out.println("***********\n");
+
 
             }
-
-
-            System.out.println("Node registration successful. Join the overlay.");
-
-            JoinOverlay joinOverlay = new JoinOverlay(randomNodeIP,randomNodePort,randomNodeIdentifier);
-            Thread thread = new Thread(joinOverlay);
-            thread.start();
 
             while (true) {
                 try {
                     socket = serverSocket.accept();
                     System.out.println("Node server started...");
+
+                    NodeServer nodeServer = new NodeServer(socket,selfnodeDetails,this);
+                    Thread thread1 = new Thread(nodeServer);
+                    thread1.start();
+
                 } catch (IOException e) {
                     log.error("Exception occured when trying to accept connections");
                     e.printStackTrace();
