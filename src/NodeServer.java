@@ -47,10 +47,15 @@ public class NodeServer implements  Runnable{
         String requestType = tokens[0].trim();
 
         if(requestType.equals("JOIN")){
+            int hops = Integer.parseInt(tokens[1].trim());
             String newIPRec = tokens[2].trim();
             int newPortRec = Integer.parseInt(tokens[3].trim());
             String newNickNameRec = tokens[4].trim();
             String newIdentifierRec = tokens[5].trim();
+
+
+
+            log.info("JOIN Message hop count "+hops+" Identifier : "+newIdentifierRec+" Ipaddress : "+newIPRec+" Port : "+newPortRec+" nick name "+newNickNameRec);
 
             // setting the leafset for the first guy.
             if(nodeMain.randomNodeID==0){
@@ -103,7 +108,6 @@ public class NodeServer implements  Runnable{
                 System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getPort());
                 System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getNickName());*/
 
-
             }else{
                 // From third guy onwards.
                 log.info("More than 2 Nodes are there in the system.  Now regular routing and updation");
@@ -121,29 +125,75 @@ public class NodeServer implements  Runnable{
                 int templeftLeaf = Integer.parseInt(nodeMain.leafLeft.getIdentifier(), 16);
                 int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
 
-                boolean betweenleafs = isBetween(temprightLeaf,templeftLeaf,tempRecvdNodeIdenfifier);
+                log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
+
+                boolean betweenleafs = true;
+
+                if(temprightLeaf!= templeftLeaf){
+                    betweenleafs = isBetween(templeftLeaf,temprightLeaf,tempRecvdNodeIdenfifier);
+                }
+
+
                 System.out.println("is it between : "+betweenleafs);
                 if(!betweenleafs){
                     // chk the routing table for closest match.
-
+                    log.info("The value doesnt fall between two values.");
                     int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
                     char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+                    int firstNonMatchingPrefixInt = Integer.parseInt(firstNonMatchingPrefix+"",16);
 
-                    if(nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefix).getIdentifier()!=null){
+                    log.info("Numer of prefix matching "+numberPrefixMatching+" firstnonmatching prefix "+firstNonMatchingPrefixInt);
+
+                    log.info("Value in the arralist "+nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIpAddress());
+
+                    int index = firstNonMatchingPrefixInt;
+                    String messToSend =null;
+                    // Find the numerically closest guy from routing table and send it to that guy.
+                    if(nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIdentifier()!=null){
                         log.info("There is an entry in the non matching cell. Forward to that guy.");
-
-
+                        messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
                     }else{
+
                         log.info("No entry in the non matching cell. So check for closest.");
-                        int index = getNumericallyCloserIndex(nodeMain.routingTable.get(numberPrefixMatching),newIdentifierRec);
+                        index = getNumericallyCloserIndex(nodeMain.routingTable.get(numberPrefixMatching),newIdentifierRec);
 
                         if(nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier().equals(selfNodeDetails.getIdentifier())){
-                            log.info("Closest one is me . I am responsile for him. ");
+                            log.info("Closest one is me . I am responsile for him. So place him in the appropriate position. ");
+
+                            // check to find if the node is greater or lesser and send the final message. Update the leafset also.
+                            // TO DO
+
+
+
                         }else{
+                            log.info("Numerically closes guy : "+nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier());
+                            log.info("Have to send the packet to him. ");
+                            messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
 
                         }
 
+                        log.debug("Message to send "+ messToSend);
+
                     }
+
+                    // Send join message
+
+                    String newIpToSend = nodeMain.routingTable.get(numberPrefixMatching).get(index).getIpAddress();
+                    int portTosend = nodeMain.routingTable.get(numberPrefixMatching).get(index).getPort();
+
+
+                    try {
+                        nodeSocket = getNodeSocket(newIpToSend,portTosend);
+                        sendDataToDestination(nodeSocket,messToSend);
+                    } catch (IOException e) {
+                        log.error("Exception occured when trying to send message to destination");
+                        e.printStackTrace();
+                    }
+                }else {
+                    log.info("The value falls between the two leafsets. Place it at the proper place with wrapping.");
+
+
+
                 }
 
 
@@ -213,16 +263,30 @@ public class NodeServer implements  Runnable{
 
         ArrayList<String> allIdentifiers = getAllIdentifiersInRow(allNodesInRow);
 
-        int oldValue = Math.abs(Integer.parseInt(allIdentifiers.get(0),16)-newIdentifierInt);
+
+        int oldValue = 0;
         int newValue =0;
         int index =0;
+        int tempvalue=0;
 
-        for(int i=1;i<allIdentifiers.size();i++){
+        for(tempvalue=0;tempvalue<allIdentifiers.size();tempvalue++){
+            if(allIdentifiers.get(tempvalue)!=null){
+                oldValue = Math.abs(Integer.parseInt(allIdentifiers.get(tempvalue),16)-newIdentifierInt);
+                break;
+            }
 
-            newValue = Math.abs(Integer.parseInt(allIdentifiers.get(i),16)-newIdentifierInt);
-            if(newValue<=oldValue){
-                oldValue = newValue;
-                index = i;
+        }
+
+        log.info("Temp value outside is "+tempvalue);
+
+        for(int i=tempvalue;i<allIdentifiers.size();i++){
+
+            if(allIdentifiers.get(i)!=null) {
+                newValue = Math.abs(Integer.parseInt(allIdentifiers.get(i), 16) - newIdentifierInt);
+                if (newValue <= oldValue) {
+                    oldValue = newValue;
+                    index = i;
+                }
             }
 
         }
