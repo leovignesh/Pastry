@@ -89,18 +89,11 @@ public class NodeServer implements  Runnable{
                 int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
                 char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
 
-                /*System.out.println("value in position " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getIdentifier());
-                System.out.println("value in position " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getIpAddress());
-                System.out.println("value in position " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getPort());
-                System.out.println("value in position " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getNickName());*/
-
-                nodeMain.routingTable.get(numberPrefixMatching).set(Integer.parseInt(firstNonMatchingPrefix+"",16),newNodeArrived);
 
 
-                /*System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getIdentifier());
-                System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getIpAddress());
-                System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getPort());
-                System.out.println("value in position after :  " + nodeMain.routingTable.get(numberPrefixMatching).get(Integer.parseInt(firstNonMatchingPrefix + "", 16)).getNickName());*/
+                //nodeMain.routingTable.get(numberPrefixMatching).set(Integer.parseInt(firstNonMatchingPrefix+"",16),newNodeArrived);
+
+
 
             }else{
                 // From third guy onwards.
@@ -115,7 +108,27 @@ public class NodeServer implements  Runnable{
 
                 // Chk if it falls between leaf sets
 
-                int temprightLeaf = Integer.parseInt(nodeMain.leafRight.getIdentifier(),16);
+                String messToSend =null;
+                NodeDetails nodeDetailsToSend = lookup(newIdentifierRec);
+
+                int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+                char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+
+                System.out.println("Node details to send Identifier : "+nodeDetailsToSend.getIdentifier());
+                System.out.println("Node details to send IPaddress : "+nodeDetailsToSend.getIpAddress());
+                System.out.println("Node details to send port : "+nodeDetailsToSend.getPort());
+
+                if(nodeDetailsToSend.getIdentifier().equals(selfNodeDetails.getIdentifier())){
+                    System.out.println("I am the guy responsible for it. Find out where to place. Left or right. Same logic like leaf set.");
+
+
+
+                }else{
+                    messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
+                }
+
+
+                /*int temprightLeaf = Integer.parseInt(nodeMain.leafRight.getIdentifier(),16);
                 int templeftLeaf = Integer.parseInt(nodeMain.leafLeft.getIdentifier(), 16);
                 int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
 
@@ -190,8 +203,11 @@ public class NodeServer implements  Runnable{
                     nodedetailsTemp = getNumericallyCloserIndex(newIdentifierRec);
 
                     System.out.println("Numberically closer : "+nodedetailsTemp.getIdentifier()+" ipaddress "+nodedetailsTemp.getIpAddress());
+                    if(nodedetailsTemp.getIdentifier().equals(selfNodeDetails.getIdentifier())){
+                        System.out.println("I am the closer node. Find ");
+                    }
 
-                }
+                }*/
 
 
             }
@@ -232,7 +248,7 @@ public class NodeServer implements  Runnable{
                     int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),nodeFinal.getIdentifier());
                     char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),nodeFinal.getIdentifier());
 
-                    nodeMain.routingTable.get(numberPrefixMatching).set(Integer.parseInt(firstNonMatchingPrefix+"",16),nodeFinal);
+                    //nodeMain.routingTable.get(numberPrefixMatching).set(Integer.parseInt(firstNonMatchingPrefix+"",16),nodeFinal);
 
                 }else{
                     // TO DO Compute
@@ -249,6 +265,96 @@ public class NodeServer implements  Runnable{
 
 
     }
+
+
+    public NodeDetails lookup(String newIdentifierRec){
+
+        int temprightLeaf = Integer.parseInt(nodeMain.leafRight.getIdentifier(),16);
+        int templeftLeaf = Integer.parseInt(nodeMain.leafLeft.getIdentifier(), 16);
+        int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
+
+        log.info("Right "+nodeMain.leafRight.getIdentifier()+" left "+nodeMain.leafLeft.getIdentifier()+" rcvd "+newIdentifierRec);
+        log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
+
+        boolean betweenleafs = true;
+        NodeDetails  nodedetailsTemp = null;
+
+        if(temprightLeaf!= templeftLeaf){
+            betweenleafs = isBetween(templeftLeaf,temprightLeaf,tempRecvdNodeIdenfifier);
+        }
+
+
+        System.out.println("is it between : "+betweenleafs);
+
+        if(!betweenleafs){
+            // chk the routing table for closest match.
+            log.info("The value doesnt fall between two values.");
+            int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+            char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+            int firstNonMatchingPrefixInt = Integer.parseInt(firstNonMatchingPrefix+"",16);
+
+            log.info("Numer of prefix matching "+numberPrefixMatching+" firstnonmatching prefix "+firstNonMatchingPrefixInt);
+
+            log.info("Value in the arralist "+nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIpAddress());
+
+            //int index = firstNonMatchingPrefixInt;
+            String messToSend =null;
+            // Find the numerically closest guy from routing table and send it to that guy.
+            if(nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIdentifier()!=null){
+                log.info("There is an entry in the non matching cell. Forward to that guy.");
+                //messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
+                nodedetailsTemp = nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt);
+
+            }else{
+
+                log.info("No entry in the non matching cell. So check for closest.");
+                nodedetailsTemp = getNumericallyCloserIndex(newIdentifierRec);
+
+                /*if(nodedetailsTemp.getIdentifier().equals(selfNodeDetails.getIdentifier())){
+                    log.info("Closest one is me . I am responsile for him. So place him in the appropriate position. ");
+
+                    // check to find if the node is greater or lesser and send the final message. Update the leafset also.
+                    // TO DO
+
+
+
+                }else{
+                    log.info("Numerically closes guy : "+nodedetailsTemp.getIdentifier());
+                    log.info("Have to send the packet to him. ");
+                    //messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
+                    System.out.println("Send to that guy.");
+
+                }*/
+
+                //log.debug("Message to send "+ messToSend);
+
+            }
+
+            // Send join message
+
+            /*String newIpToSend = nodedetailsTemp.getIpAddress();
+            int portTosend = nodedetailsTemp.getPort();
+
+
+            try {
+                nodeSocket = getNodeSocket(newIpToSend,portTosend);
+                sendDataToDestination(nodeSocket,messToSend);
+            } catch (IOException e) {
+                log.error("Exception occured when trying to send message to destination");
+                e.printStackTrace();
+            }*/
+        }else {
+            log.info("The value falls between the two leafsets. Place it at the proper place with wrapping.");
+            nodedetailsTemp = getNumericallyCloserIndex(newIdentifierRec);
+
+            System.out.println("Numberically closer : "+nodedetailsTemp.getIdentifier()+" ipaddress "+nodedetailsTemp.getIpAddress());
+
+        }
+        return nodedetailsTemp;
+    }
+
+
+
 
     private NodeDetails getNumericallyCloserIndex(String newIdentifier){
 
@@ -337,19 +443,13 @@ public class NodeServer implements  Runnable{
                     oldvalue = newvale;
                     index = i;
 
-                }/*else if(newvale==oldvalue){
-                System.out.println("Equidistant");
-            }*/
+                }
 
             }
             numbericallyCloserIndex = index;
             System.out.println("New value "+newvale);
             System.out.println("oldvalue " + oldvalue + " index " + index + " value " + allIdentifiers.get(numbericallyCloserIndex));
-            // Check if it falls within the same node identifier. TODO
 
-            if(allIdentifiers.get(numbericallyCloserIndex).equals(selfNodeIdentifierInt)){
-                System.out.println("I am the closest guy to him. Need to place him in either left or right.");
-            }
 
         }
 
@@ -384,49 +484,7 @@ public class NodeServer implements  Runnable{
         return tempNode;
 
 
-
-        //System.out.println("Numerical closer number : "+allNodesInRow.get(numbericallyCloserIndex).getIdentifier());
-
     }
-
-    /*private ArrayList<Integer> getAllIdentifiersSortedToInt(ArrayList<String> allIdentifier){
-
-        Iterator<String> itr = allIdentifier.iterator();
-        ArrayList<Integer> allIdentifierInteger = new ArrayList<Integer>();
-
-        while(itr.hasNext()){
-            String identifierTemp = itr.next();
-            allIdentifierInteger.add(Integer.parseInt(identifierTemp,16));
-
-        }
-
-        System.out.println("Before sorting");
-
-        Iterator<Integer> itr1 = allIdentifierInteger.iterator();
-        while(itr1.hasNext()){
-            System.out.println("before storing "+itr1.next());
-        }
-
-
-
-        ArrayList<Integer> allIdentifierSorteInteger = new ArrayList<Integer>();
-        Collections.sort(allIdentifierInteger);
-
-        for(Integer id: allIdentifierInteger){
-            allIdentifierSorteInteger.add(id);
-        }
-
-
-        Iterator<Integer> itr2 = allIdentifierSorteInteger.iterator();
-        while(itr2.hasNext()){
-            System.out.println("after storing "+itr2.next());
-        }
-
-        return allIdentifierInteger;
-
-
-    }*/
-
 
     private ArrayList<String> getAllIdentifiersInRow(ArrayList<NodeDetails> allNodesInRow){
 
