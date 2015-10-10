@@ -1,9 +1,6 @@
 import org.apache.log4j.Logger;
 
-import javax.xml.soap.Node;
 import java.io.*;
-import java.lang.reflect.Array;
-import java.net.Inet4Address;
 import java.net.Socket;
 import java.util.*;
 
@@ -122,6 +119,7 @@ public class NodeServer implements  Runnable{
                 int templeftLeaf = Integer.parseInt(nodeMain.leafLeft.getIdentifier(), 16);
                 int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
 
+                log.info("Right "+nodeMain.leafRight.getIdentifier()+" left "+nodeMain.leafLeft.getIdentifier()+" rcvd "+newIdentifierRec);
                 log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
 
                 boolean betweenleafs = true;
@@ -189,8 +187,9 @@ public class NodeServer implements  Runnable{
                     }
                 }else {
                     log.info("The value falls between the two leafsets. Place it at the proper place with wrapping.");
+                    nodedetailsTemp = getNumericallyCloserIndex(newIdentifierRec);
 
-
+                    System.out.println("Numberically closer : "+nodedetailsTemp.getIdentifier()+" ipaddress "+nodedetailsTemp.getIpAddress());
 
                 }
 
@@ -291,7 +290,7 @@ public class NodeServer implements  Runnable{
         }
 
 
-        //int selfNodeIdentifierInt = Integer.parseInt(selfNodeDetails.getIdentifier(), 16);
+        int selfNodeIdentifierInt = Integer.parseInt(selfNodeDetails.getIdentifier(), 16);
 
         int arrLastValue = allIdentifiers.get(allIdentifiers.size() - 1);
         int arrFirstValue = allIdentifiers.get(0);
@@ -326,6 +325,7 @@ public class NodeServer implements  Runnable{
         } else {
             System.out.println("The value falls between two nodes that are already present.");
 
+            System.out.println(allIdentifiers.get(0)+" "+allIdentifiers.get(1)+" "+newIdentifierInt);
             int oldvalue = Math.abs(allIdentifiers.get(0) - newIdentifierInt);
             int index = 0;
             int newvale = 0;
@@ -343,13 +343,19 @@ public class NodeServer implements  Runnable{
 
             }
             numbericallyCloserIndex = index;
+            System.out.println("New value "+newvale);
             System.out.println("oldvalue " + oldvalue + " index " + index + " value " + allIdentifiers.get(numbericallyCloserIndex));
             // Check if it falls within the same node identifier. TODO
+
+            if(allIdentifiers.get(numbericallyCloserIndex).equals(selfNodeIdentifierInt)){
+                System.out.println("I am the closest guy to him. Need to place him in either left or right.");
+            }
+
         }
 
         String closerIdentifier = allIdentifiersString.get(numbericallyCloserIndex);
 
-        // Get
+        // Return the the NodeDetails object for reference.
 
         boolean nodeDetails = false;
         NodeDetails tempNode =null;
@@ -362,10 +368,12 @@ public class NodeServer implements  Runnable{
 
             while (itr3.hasNext()) {
                 tempNode = itr3.next();
-                if(tempNode.getIdentifier().equals(closerIdentifier)){
+                if(tempNode.getIdentifier()!=null) {
+                    if (tempNode.getIdentifier().equals(closerIdentifier)) {
 
-                    nodeDetails = true;
-                    break;
+                        nodeDetails = true;
+                        break;
+                    }
                 }
             }
             if(nodeDetails){
