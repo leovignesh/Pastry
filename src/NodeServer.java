@@ -5,10 +5,7 @@ import java.io.*;
 import java.lang.reflect.Array;
 import java.net.Inet4Address;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by leo on 9/27/15.
@@ -155,7 +152,7 @@ public class NodeServer implements  Runnable{
                     }else{
 
                         log.info("No entry in the non matching cell. So check for closest.");
-                        index = getNumericallyCloserIndex(nodeMain.routingTable.get(numberPrefixMatching),newIdentifierRec);
+                        index = getNumericallyCloserIndex(numberPrefixMatching,newIdentifierRec);
 
                         if(nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier().equals(selfNodeDetails.getIdentifier())){
                             log.info("Closest one is me . I am responsile for him. So place him in the appropriate position. ");
@@ -246,10 +243,6 @@ public class NodeServer implements  Runnable{
 
             }
 
-
-
-
-
         }else if(requestType.equals("NEWNODETABLE")){
 
         }
@@ -257,41 +250,110 @@ public class NodeServer implements  Runnable{
 
     }
 
-    private int getNumericallyCloserIndex(ArrayList<NodeDetails> allNodesInRow,String newIdentifier){
-
-        int newIdentifierInt = Integer.parseInt(newIdentifier,16);
-
-        ArrayList<String> allIdentifiers = getAllIdentifiersInRow(allNodesInRow);
+    private int getNumericallyCloserIndex(int numberOfMatchingPrefix,String newIdentifier){
 
 
-        int oldValue = 0;
-        int newValue =0;
-        int index =0;
-        int tempvalue=0;
+        ArrayList<Integer> allIdentifiers = new ArrayList<Integer>();
 
-        for(tempvalue=0;tempvalue<allIdentifiers.size();tempvalue++){
-            if(allIdentifiers.get(tempvalue)!=null){
-                oldValue = Math.abs(Integer.parseInt(allIdentifiers.get(tempvalue),16)-newIdentifierInt);
-                break;
-            }
+        for(int i=0;i<4;i++){
 
-        }
+            ArrayList<NodeDetails> allNodeDetailsTemp = nodeMain.routingTable.get(i);
 
-        log.info("Temp value outside is "+tempvalue);
+            Iterator<NodeDetails> itr = allNodeDetailsTemp.iterator();
 
-        for(int i=tempvalue;i<allIdentifiers.size();i++){
+            while (itr.hasNext()){
+                NodeDetails nodeDetails = itr.next();
 
-            if(allIdentifiers.get(i)!=null) {
-                newValue = Math.abs(Integer.parseInt(allIdentifiers.get(i), 16) - newIdentifierInt);
-                if (newValue <= oldValue) {
-                    oldValue = newValue;
-                    index = i;
+                if(nodeDetails.getIdentifier()!=null){
+                    allIdentifiers.add(Integer.parseInt(nodeDetails.getIdentifier(),16));
                 }
             }
+        }
+
+        // Testing the identifiers.
+        Iterator<Integer> itr = allIdentifiers.iterator();
+
+        while (itr.hasNext()){
 
         }
-        log.debug("Numerically closer value to "+newIdentifier+" is : "+allIdentifiers.get(index));
-        return index;
+
+
+
+        // Removing duplicates as there might be the same value all around
+        Set setItems = new LinkedHashSet<Integer>(allIdentifiers);
+        allIdentifiers.clear();
+        allIdentifiers.addAll(setItems);
+
+        // Sorting all the identifiers and checking.
+        Collections.sort(allIdentifiers);
+
+
+        int selfNodeIdentifierInt = Integer.parseInt(selfNodeDetails.getIdentifier(), 16);
+
+        int arrLastValue = allIdentifiers.get(allIdentifiers.size() - 1);
+        int arrFirstValue = allIdentifiers.get(0);
+        System.out.println(arrFirstValue);
+
+        int finalValue = Integer.parseInt("FFFF", 16);
+        int newIdentifierInt = Integer.parseInt(newIdentifier, 16);
+
+        int numbericallyCloserIndex = 0;
+
+        if (newIdentifierInt < allIdentifiers.get(0)) {
+            //System.out.println("The value is before the first value in the list.");
+
+            if ((arrFirstValue - newIdentifierInt) <= ((finalValue - arrLastValue) + newIdentifierInt)) {
+                System.out.println("Value closer or equal is the first value.----" + allIdentifiers.get(0));
+            } else {
+                System.out.println("Last value in array closer****" + allIdentifiers.get(allIdentifiers.size() - 1));
+                numbericallyCloserIndex = allIdentifiers.size() - 1;
+            }
+
+        } else if (newIdentifierInt > allIdentifiers.get(allIdentifiers.size() - 1)) {
+            //System.out.println("The value is greater than the last value in the list. ");
+            System.out.println("compare - arrlastvalue " + (newIdentifierInt - arrLastValue) + " ((finishvalue-compare)+arrfirstvalue ) " + ((finalValue - newIdentifierInt) + arrFirstValue));
+
+            if ((newIdentifierInt - arrLastValue) < ((finalValue - newIdentifierInt) + arrFirstValue)) {
+                System.out.println("value closer to the last value in array .... " + allIdentifiers.get(allIdentifiers.size() - 1));
+                numbericallyCloserIndex = allIdentifiers.size() - 1;
+            } else {
+                System.out.println("Equal or closer is the first value in the array ::: " + allIdentifiers.get(0));
+
+            }
+        } else {
+            System.out.println("The value falls between two nodes that are already present.");
+
+            int oldvalue = Math.abs(allIdentifiers.get(0) - newIdentifierInt);
+            int index = 0;
+            int newvale = 0;
+            for (int i = 1; i < allIdentifiers.size(); i++) {
+                newvale = Math.abs(allIdentifiers.get(i) - newIdentifierInt);
+
+                //System.out.println("New value "+newvale+" smaller "+arrInt.get(i)+" old value "+oldvalue);
+                if (newvale <= oldvalue) {
+                    oldvalue = newvale;
+                    index = i;
+
+                }/*else if(newvale==oldvalue){
+                System.out.println("Equidistant");
+            }*/
+
+            }
+            numbericallyCloserIndex = index;
+            System.out.println("oldvalue " + oldvalue + " index " + index + " value " + allIdentifiers.get(index));
+
+            if(allIdentifiers.get(index).equals(selfNodeIdentifierInt)){
+                numberOfMatchingPrefix++;
+
+
+
+            }
+
+
+        }
+
+
+        //System.out.println("Numerical closer number : "+allNodesInRow.get(numbericallyCloserIndex).getIdentifier());
 
     }
 
@@ -345,6 +407,23 @@ public class NodeServer implements  Runnable{
 
         }
         return  allIdentifier;
+
+    }
+
+    private ArrayList<Integer> getAllIdentifiersIntegers(ArrayList<NodeDetails> allNodesInRow){
+
+        ArrayList<String> allIdentifierString = getAllIdentifiersInRow(allNodesInRow);
+
+        ArrayList<Integer> allIdentifierInteger = new ArrayList<Integer>();
+
+        Iterator<String> itr = allIdentifierString.iterator();
+        while (itr.hasNext()){
+            allIdentifierInteger.add(Integer.parseInt(itr.next(),16));
+
+
+        }
+        return allIdentifierInteger;
+
 
     }
 
