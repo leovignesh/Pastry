@@ -149,7 +149,6 @@ public class NodeServer implements  Runnable{
                 }
 
 
-
                 System.out.println("Matching after removing init "+matching.size());
 
                 if(matching.size()!=0) {
@@ -403,19 +402,117 @@ public class NodeServer implements  Runnable{
                 try {
                     ArrayList<NodeDetails> allNodesDetailRow = (ArrayList<NodeDetails>) receiveObjectFromDestination(socket);
                     updateRoutingTable(allNodesDetailRow,rows[i]);
+                    log.info("Routing Table updated. Send a message all the Nodes in the routing table about update.");
+
+                    sendRoutingTableUpdateToNodes();
+
                 } catch (IOException e) {
                     log.error("Excepection occured when trying to retrievie data from destnation");
 
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
-
-
             }
+        }else if(requestType.equals("ROUTINGTABLECONV")){
+
+            String rcvdIdentifier = tokens[1].trim();
+
+            try {
+
+                Map<Integer,ArrayList<NodeDetails>> routingTable = (Map<Integer,ArrayList<NodeDetails>>)receiveObjectFromDestination(socket);
+
+                log.info("Routing table update received from "+rcvdIdentifier);
+                updateFinalRoutingTable(routingTable);
+
+            } catch (IOException e) {
+                log.info("Exceptinon occured when trying to get routing table.");
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+
         }
 
 
     }
+
+    private void updateFinalRoutingTable(Map<Integer,ArrayList<NodeDetails>> routingTable){
+
+        for(int i=0;i<4;i++){
+
+            for(int j=0;j<16;j++){
+
+                if(nodeMain.routingTable.get(i).get(j).getIdentifier()==null){
+
+                    if(routingTable.get(i).get(j).getIdentifier()!=null){
+
+                        nodeMain.routingTable.get(i).set(j,routingTable.get(i).get(j));
+
+                    }
+
+
+                }
+
+            }
+
+        }
+
+
+
+    }
+
+
+
+    private void sendRoutingTableUpdateToNodes(){
+
+
+        ArrayList<String> alreadySent = new ArrayList<String>();
+
+        for(int i=0;i<4;i++){
+
+            Iterator<NodeDetails> itr = nodeMain.routingTable.get(i).iterator();
+
+            while (itr.hasNext()){
+
+                NodeDetails nodeDetailsTemp = itr.next();
+
+                if(nodeDetailsTemp.getIdentifier()!=null){
+
+                    String ipAddressTemp  = nodeDetailsTemp.getIpAddress();
+                    int portTemp = nodeDetailsTemp.getPort();
+
+                    if(!nodeDetailsTemp.getIdentifier().equals(selfNodeDetails.getIdentifier()) && !alreadySent.contains(nodeDetailsTemp.getIdentifier())) {
+
+                        System.out.println("Send to ip : "+ipAddressTemp);
+                        String messToSend = "ROUTINGTABLECONV "+nodeDetailsTemp.getIdentifier();
+                        try {
+
+                            nodeSocket = getNodeSocket(ipAddressTemp,portTemp);
+                            sendDataToDestination(nodeSocket,messToSend);
+                            sendObjectToDestination(nodeSocket,nodeMain.routingTable);
+                            System.out.println("Message sent.");
+                            alreadySent.add(nodeDetailsTemp.getIdentifier());
+                        } catch (IOException e) {
+                            log.error("Exception occured when trying to get node socket.");
+                            e.printStackTrace();
+                        }
+
+                    }
+
+                }
+
+
+            }
+
+
+        }
+
+
+
+    }
+
+
 
     private void updateRoutingTable(ArrayList<NodeDetails> nodeDetailRow,String rowNumbersTemp){
 
@@ -427,10 +524,10 @@ public class NodeServer implements  Runnable{
         for(int i=0;i<nodeDetailRow.size();i++){
 
             if(nodeMain.routingTable.get(rowNumber).get(i).getIdentifier()==null){
-                System.out.println("Value is null ");
+                //System.out.println("Value is null ");
 
                 if(nodeDetailRow.get(i).getIdentifier()!=null){
-                    System.out.println("Here it is present... grab it ");
+                    //System.out.println("Here it is present... grab it ");
                     nodeMain.routingTable.get(rowNumber).set(i,nodeDetailRow.get(i));
                 }
 

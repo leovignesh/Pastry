@@ -50,8 +50,8 @@ public class NodeClient implements  Runnable{
 
             switch (input) {
                 case 1:
-                    System.out.println("******************");
-                    System.out.println("Display the Routing table entries");
+                    System.out.println("******************\n");
+                    System.out.println("Routing table Entries :\n");
 
                     Set<Integer> routingTableKey = nodeMain.routingTable.keySet();
                     Iterator itr = routingTableKey.iterator();
@@ -61,13 +61,15 @@ public class NodeClient implements  Runnable{
 
                         int entries = nodeMain.routingTable.get(index).size();
 
-                        System.out.println("\n Row [" + index + "] : ");
-                        for (int i = 0; i < entries; i++) {
 
-                            System.out.println("[" + index + "] [" + i + "] " + nodeMain.routingTable.get(index).get(i).getIpAddress() + " " + nodeMain.routingTable.get(index).get(i).getPort() + " " + nodeMain.routingTable.get(index).get(i).getIdentifier() + " " + nodeMain.routingTable.get(index).get(i).getNickName());
-
-                        }
+                        System.out.println(nodeMain.routingTable.get(index).get(0).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(1).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(2).getIdentifier()
+                                +" | "+nodeMain.routingTable.get(index).get(3).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(4).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(5).getIdentifier()
+                                +" | "+nodeMain.routingTable.get(index).get(6).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(7).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(8).getIdentifier()
+                                +" | "+nodeMain.routingTable.get(index).get(9).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(10).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(11).getIdentifier()
+                                +" | "+nodeMain.routingTable.get(index).get(12).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(13).getIdentifier() +" | "+nodeMain.routingTable.get(index).get(14).getIdentifier()
+                                +" | "+nodeMain.routingTable.get(index).get(15).getIdentifier() +"\n");
                     }
+                    System.out.println("*****************");
                     break;
                 case 2:
                     System.out.println("************");
