@@ -230,8 +230,6 @@ public class NodeServer implements  Runnable{
             }
 
 
-
-
         }else if(requestType.equals("FINALOK")){
 
             String origLeafLeft = tokens[1].trim();
@@ -484,14 +482,14 @@ public class NodeServer implements  Runnable{
 
                     if(!nodeDetailsTemp.getIdentifier().equals(selfNodeDetails.getIdentifier()) && !alreadySent.contains(nodeDetailsTemp.getIdentifier())) {
 
-                        System.out.println("Send to ip : "+ipAddressTemp);
+                        //System.out.println("Send to ip : "+ipAddressTemp);
                         String messToSend = "ROUTINGTABLECONV "+nodeDetailsTemp.getIdentifier();
                         try {
 
                             nodeSocket = getNodeSocket(ipAddressTemp,portTemp);
                             sendDataToDestination(nodeSocket,messToSend);
                             sendObjectToDestination(nodeSocket,nodeMain.routingTable);
-                            System.out.println("Message sent.");
+
                             alreadySent.add(nodeDetailsTemp.getIdentifier());
                         } catch (IOException e) {
                             log.error("Exception occured when trying to get node socket.");

@@ -31,6 +31,11 @@ public class DiscoveryStart {
 
     public void startDiscoveryNode() {
 
+        DiscoveryClient discoveryClient = new DiscoveryClient();
+        Thread thread1 = new Thread(discoveryClient);
+        thread1.start();
+
+
         while (true) {
 
             try {
