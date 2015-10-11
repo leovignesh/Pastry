@@ -3,7 +3,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
-import java.util.logging.FileHandler;
 
 /**
  * Created by leo on 10/11/15.
@@ -67,14 +66,14 @@ public class StoreDataClient implements Runnable{
 
         switch (input){
             case 1:
-                System.out.println("Enter the File to be loaded :");
+                System.out.println("Enter the File Name to be loaded :");
                 scanner = new Scanner(System.in);
                 String fileDetails = scanner.nextLine();
 
                 String[] fileNameSplit = fileDetails.split(" ");
                 String fileName = fileNameSplit[0].trim();
 
-                if(fileNameSplit.length>2){
+                if(fileNameSplit.length>1){
                     selfFileIdentifier = fileNameSplit[1].trim();
                 }
 
@@ -82,7 +81,7 @@ public class StoreDataClient implements Runnable{
                     selfFileIdentifier = computeCheckSum();
                 }
 
-                getClosestServer();
+                getClosestServer("FILESAVE");
 
                 try{
 
@@ -95,6 +94,23 @@ public class StoreDataClient implements Runnable{
                     log.error("Exceptin occured when reading from a file.");
                     System.out.println();
                 }
+
+                break;
+
+            case 2:
+                System.out.println("Enter the File Name to be retrieved :");
+                scanner = new Scanner(System.in);
+
+                String fileDetailsToRetrieve = scanner.nextLine();
+
+                String[] fileDetailsRetSplit = fileDetailsToRetrieve.split(" ");
+                String fileNameRet = fileDetailsRetSplit[0].trim();
+
+                if(fileDetailsRetSplit.length>1){
+                    selfFileIdentifier = fileDetailsRetSplit[1].trim();
+                }
+
+                getClosestServer("FILERET");
 
         }
 
@@ -132,9 +148,10 @@ public class StoreDataClient implements Runnable{
     }
 
 
-    private void getClosestServer(){
+    private void getClosestServer(String type){
 
-        String messToSend = "GETNODE "+selfFileIdentifier;
+        getRandomIP();
+        String messToSend = "GETNODE "+type+" "+selfFileIdentifier;
         try {
             socket = getSocket(randomIp,randomPort);
             sendDataToDestination(socket,messToSend);
