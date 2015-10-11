@@ -414,13 +414,14 @@ public class NodeServer implements  Runnable{
         }else if(requestType.equals("ROUTINGTABLECONV")){
 
             String rcvdIdentifier = tokens[1].trim();
+            int rowNumber = Integer.parseInt(tokens[2].trim());
 
             try {
 
-                Map<Integer,ArrayList<NodeDetails>> routingTable = (Map<Integer,ArrayList<NodeDetails>>)receiveObjectFromDestination(socket);
+                ArrayList<NodeDetails> routingTable = (ArrayList<NodeDetails>)receiveObjectFromDestination(socket);
 
                 log.info("Routing table update received from "+rcvdIdentifier);
-                updateFinalRoutingTable(routingTable);
+                updateFinalRoutingTable(routingTable,rowNumber);
 
             } catch (IOException e) {
                 log.info("Exceptinon occured when trying to get routing table.");
@@ -435,28 +436,20 @@ public class NodeServer implements  Runnable{
 
     }
 
-    private void updateFinalRoutingTable(Map<Integer,ArrayList<NodeDetails>> routingTable){
+    private void updateFinalRoutingTable(ArrayList<NodeDetails> routingTablePart,int rowNumber){
 
-        for(int i=0;i<4;i++){
+        for(int j=0;j<16;j++){
 
-            for(int j=0;j<16;j++){
+            if(nodeMain.routingTable.get(rowNumber).get(j).getIdentifier()==null){
 
-                if(nodeMain.routingTable.get(i).get(j).getIdentifier()==null){
+                if(routingTablePart.get(j).getIdentifier()!=null){
 
-                    if(routingTable.get(i).get(j).getIdentifier()!=null){
-
-                        nodeMain.routingTable.get(i).set(j,routingTable.get(i).get(j));
-
-                    }
-
+                    nodeMain.routingTable.get(rowNumber).set(j,routingTablePart.get(j));
 
                 }
-
             }
 
         }
-
-
 
     }
 
@@ -483,12 +476,14 @@ public class NodeServer implements  Runnable{
                     if(!nodeDetailsTemp.getIdentifier().equals(selfNodeDetails.getIdentifier()) && !alreadySent.contains(nodeDetailsTemp.getIdentifier())) {
 
                         //System.out.println("Send to ip : "+ipAddressTemp);
-                        String messToSend = "ROUTINGTABLECONV "+nodeDetailsTemp.getIdentifier();
+                        String messToSend = "ROUTINGTABLECONV "+nodeDetailsTemp.getIdentifier()+" "+i;
                         try {
 
+                            System.out.println("preparing to send "+nodeDetailsTemp.getIdentifier());
                             nodeSocket = getNodeSocket(ipAddressTemp,portTemp);
                             sendDataToDestination(nodeSocket,messToSend);
-                            sendObjectToDestination(nodeSocket,nodeMain.routingTable);
+                            sendObjectToDestination(nodeSocket,nodeMain.routingTable.get(i));
+                            System.out.println("Routing table information sent to "+nodeDetailsTemp.getIdentifier());
 
                             alreadySent.add(nodeDetailsTemp.getIdentifier());
                         } catch (IOException e) {
@@ -575,28 +570,28 @@ public class NodeServer implements  Runnable{
             String messToSend =null;
             // Find the numerically closest guy from routing table and send it to that guy.
             if(nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIdentifier()!=null){
-                log.info("There is an entry in the non matching cell. Forward to that guy.");
+                log.info("NOTBETWEENLEWFS : There is an entry in the non matching cell. Forward to that guy.");
                 //messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
                 nodedetailsTemp = nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt);
-
+                log.info("NOTBETWEENLEWFS : Messge to be sent to  "+nodedetailsTemp.getIdentifier());
             }else{
 
                 log.info("No entry in the non matching cell. So check for closest.");
                 index = getNumericallyCloserIndex(numberPrefixMatching,newIdentifierRec);
 
                 if(nodeMain.routingTable.get(numberPrefixMatching).get(index).equals(selfNodeDetails.getIdentifier())){
-                    log.info("Closest one is me . I am responsile for him. So place him in the appropriate position. ");
+                    //log.info("Closest one is me . I am responsile for him. So place him in the appropriate position. ");
 
                     // check to find if the node is greater or lesser and send the final message. Update the leafset also.
                     // TO DO
-
+                    log.info("I am closest. So will place him near");
                     nodedetailsTemp = selfNodeDetails;
 
                 }else{
                     log.info("Numerically closes guy : " + nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier());
                     log.info("Have to send the packet to him. ");
                     //messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec;
-                    System.out.println("Send to that guy.");
+                    //System.out.println("Send to that guy.");
                     nodedetailsTemp = nodeMain.routingTable.get(numberPrefixMatching).get(index);
 
                 }
@@ -615,16 +610,16 @@ public class NodeServer implements  Runnable{
 
             String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
             String closestMatch = closestMatch(newIdentifierRec,closestMatchLeafSet,selfNodeDetails.getIdentifier());
-            System.out.println("Closest match "+closestMatch);
+            //System.out.println("Closest match "+closestMatch);
 
             if(closestMatch.equals(selfNodeDetails.getIdentifier())){
-                System.out.println("I am the closest match. I need to place it.");
+                //System.out.println("I am the closest match. I need to place it.");
                 nodedetailsTemp = selfNodeDetails;
             }else if(closestMatch.equals(left)){
-                System.out.println("Left is closer. send it");
+                //System.out.println("Left is closer. send it");
                 nodedetailsTemp = nodeMain.leafLeft;
             }else if(closestMatch.equals(right)){
-                System.out.println("Right is closer send it");
+                //System.out.println("Right is closer send it");
                 nodedetailsTemp = nodeMain.leafRight;
             }
         }
@@ -680,7 +675,7 @@ public class NodeServer implements  Runnable{
 
         int arrLastValue = allIdentifiers.get(allIdentifiers.size() - 1);
         int arrFirstValue = allIdentifiers.get(0);
-        System.out.println("size "+allIdentifiers.size());
+        //System.out.println("size "+allIdentifiers.size());
 
         int finalValue = Integer.parseInt("FFFF", 16);
         int newIdentifierInt = Integer.parseInt(newIdentifier, 16);
@@ -691,7 +686,8 @@ public class NodeServer implements  Runnable{
             //System.out.println("The value is before the first value in the list.");
 
             if ((arrFirstValue - newIdentifierInt) <= ((finalValue - arrLastValue) + newIdentifierInt)) {
-                System.out.println("Value closer or equal is the first value.----" + allIdentifiers.get(0));
+                //System.out.println("Value closer or equal is the first value.----" + allIdentifiers.get(0));
+                log.info("First value is the closer or equal "+allIdentifiers.get(0));
                 int closestMath = allIdentifiers.get(0);
                 String closestMathHex = Integer.toHexString(closestMath);
 
@@ -700,16 +696,34 @@ public class NodeServer implements  Runnable{
                 while(itr.hasNext()){
                     NodeDetails nodeDetailsTemp = itr.next();
 
-                    if(nodeDetailsTemp.getIdentifier().equals(closestMathHex)){
-                        numbericallyCloserIndex = i;
-                        break;
+                    if(nodeDetailsTemp.getIdentifier()!=null) {
+                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex)) {
+                            numbericallyCloserIndex = i;
+                            break;
+                        }
                     }
                     i++;
                 }
 
             } else {
-                System.out.println("Last value in array closer****" + allIdentifiers.get(allIdentifiers.size() - 1));
-                numbericallyCloserIndex = allIdentifiers.size() - 1;
+                log.info("Last value is closer :" + allIdentifiers.get(allIdentifiers.size() - 1));
+                int closestMath = allIdentifiers.get(allIdentifiers.size() - 1);
+                String closestMathHex = Integer.toHexString(closestMath);
+
+                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
+                int i=0;
+                while(itr.hasNext()){
+                    NodeDetails nodeDetailsTemp = itr.next();
+
+                    if(nodeDetailsTemp.getIdentifier()!=null) {
+                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex)) {
+                            numbericallyCloserIndex = i;
+                            break;
+                        }
+                    }
+                    i++;
+                }
+
             }
 
         } else if (newIdentifierInt > allIdentifiers.get(allIdentifiers.size() - 1)) {
@@ -719,16 +733,20 @@ public class NodeServer implements  Runnable{
             if ((newIdentifierInt - arrLastValue) < ((finalValue - newIdentifierInt) + arrFirstValue)) {
                 int closestMath = allIdentifiers.get(allIdentifiers.size() - 1);
                 String closestMathHex = Integer.toHexString(closestMath);
-                System.out.println("value closer to the last value in array .... " + allIdentifiers.get(allIdentifiers.size() - 1)+" In hex "+closestMathHex);
+                System.out.println("value closer to the last value in array .... " + allIdentifiers.get(allIdentifiers.size() - 1)+" In hex "+closestMathHex.toUpperCase());
 
                 Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
                 int i=0;
                 while(itr.hasNext()){
                     NodeDetails nodeDetailsTemp = itr.next();
 
-                    if(nodeDetailsTemp.getIdentifier().equals(closestMathHex)){
-                        numbericallyCloserIndex = i;
-                        break;
+                    if(nodeDetailsTemp.getIdentifier()!=null) {
+                        System.out.println("node detail temp " + nodeDetailsTemp.getIdentifier() + " closestMathhex " + closestMathHex);
+
+                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex.toUpperCase())) {
+                            numbericallyCloserIndex = i;
+                            break;
+                        }
                     }
                     i++;
                 }
@@ -737,7 +755,25 @@ public class NodeServer implements  Runnable{
                 System.out.println("numberCloserInde "+ numbericallyCloserIndex);
             } else {
                 System.out.println("Equal or closer is the first value in the array ::: " + allIdentifiers.get(0));
-                numbericallyCloserIndex =0;
+
+
+                int closestMath = allIdentifiers.get(0);
+                String closestMathHex = Integer.toHexString(closestMath);
+                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
+                int i=0;
+                while(itr.hasNext()){
+                    NodeDetails nodeDetailsTemp = itr.next();
+
+                    if(nodeDetailsTemp.getIdentifier()!=null) {
+                        System.out.println("node detail temp " + nodeDetailsTemp.getIdentifier() + " closestMathhex 000" + closestMathHex);
+
+                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex.toUpperCase())) {
+                            numbericallyCloserIndex = i;
+                            break;
+                        }
+                    }
+                    i++;
+                }
 
             }
         } else {

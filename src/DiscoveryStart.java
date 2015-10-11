@@ -39,7 +39,7 @@ public class DiscoveryStart {
         while (true) {
 
             try {
-                System.out.println("Server Started....");
+                System.out.println("Discovery Server Started....");
                 socket = serverSocket.accept();
             }catch (IOException e){
                 e.printStackTrace();

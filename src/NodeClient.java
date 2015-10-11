@@ -40,6 +40,7 @@ public class NodeClient implements  Runnable{
                 do{
                     System.out.println("Enter a Number 1 or 2");
                     while (!scanner.hasNextInt()){
+                        scanner.next();
                         System.out.println("Please enter a valid number");
                     }
                     input = scanner.nextInt();

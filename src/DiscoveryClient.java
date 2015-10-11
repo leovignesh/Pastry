@@ -29,6 +29,7 @@ public class DiscoveryClient implements Runnable{
                 do{
                     System.out.println("Please enter the Number :");
                     while (!scanner.hasNextInt()){
+                        scanner.next();
                         System.out.println("Please enter a valid number");
                     }
                     input = scanner.nextInt();

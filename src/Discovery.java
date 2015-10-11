@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.Timestamp;
@@ -61,6 +62,15 @@ public class Discovery implements Runnable{
             UnRegisterNode registerNode = new UnRegisterNode(socket,this,ipAddress,port,nickName);
             Thread thread = new Thread(registerNode);
             thread.start();
+        }else if(requestType.equals("DATASTORE")){
+
+            String type = tokens[1].trim();
+
+            String randomIP = getRandomIpDetails(1);
+            String messgeToSend = "RANDOMIP "+randomIP;
+            sendDataToDestination(socket,messgeToSend);
+
+
         }
 
     }
@@ -104,6 +114,21 @@ public class Discovery implements Runnable{
 
     private String getCurrentTime(){
         return new Timestamp(System.currentTimeMillis()).toString();
+    }
+
+
+    private void sendDataToDestination(Socket socket,String messageToSend){
+
+        try {
+            int messageLength = messageToSend.trim().length();
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeInt(messageLength);
+            dataOutputStream.write(messageToSend.getBytes(), 0, messageLength);
+            dataOutputStream.flush();
+        } catch (IOException e){
+            System.out.println("Exception occurred when trying to send data to Destination");
+            e.printStackTrace();
+        }
     }
 
 }
