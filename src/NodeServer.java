@@ -121,63 +121,67 @@ public class NodeServer implements  Runnable{
                  Check if he falls between the leaf sets
                  if it doesnt fall within the leafset, then chk the routing*/
 
+                boolean isSent = false;
+                while(!isSent) {
+
+                    String messToSend = null;
+                    NodeDetails nodeDetailsToSend = lookup(newIdentifierRec);
+
+                    int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(), newIdentifierRec);
+                    char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(), newIdentifierRec);
 
 
+                    // update the routing table.
 
-                String messToSend =null;
-                NodeDetails nodeDetailsToSend = lookup(newIdentifierRec);
+                    Map<Integer, ArrayList<NodeDetails>> receivedTempRoutingTable = updateRoutingTable(tempRoutingTable, numberPrefixMatching);
 
-                int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
-                char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
+                    if (nodeDetailsToSend.getIdentifier().equals(selfNodeDetails.getIdentifier())) {
+                        log.info("I am the guy responsible for the JOIN .YOU Find out where to place. Left or right.");
+                        log.info("Send JOIN OK");
+                        messToSend = "FINALOK LEAF";
+
+                        try {
+                            nodeSocket = getNodeSocket(newIPRec, newPortRec);
+                            sendDataToDestination(nodeSocket, messToSend);
+                        } catch (IOException e) {
+                            log.error("Exception occurred when trying to send JOINOK to Node.");
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            sendObjectToDestination(nodeSocket, nodeMain.leafLeft);
+                            sendObjectToDestination(nodeSocket, nodeMain.leafRight);
+                            sendObjectToDestination(nodeSocket, selfNodeDetails);
+                            sendObjectToDestination(nodeSocket, receivedTempRoutingTable);
+                        } catch (IOException e) {
+                            log.error("Exception occured when sending object output.");
+                            e.printStackTrace();
+                        }
+                        isSent = true;
+
+                        System.out.println("Path Travelled : " + pathTravelled);
 
 
-                // update the routing table.
+                    } else {
 
-                Map<Integer,ArrayList<NodeDetails>> receivedTempRoutingTable = updateRoutingTable(tempRoutingTable, numberPrefixMatching);
+                        pathTravelled = pathTravelled + selfNodeDetails.getIdentifier() + "=>";
+                        messToSend = "JOIN " + ++hops + " " + newIPRec + " " + newPortRec + " " + newNickNameRec + " " + newIdentifierRec + " " + " " + pathTravelled;
 
-                if(nodeDetailsToSend.getIdentifier().equals(selfNodeDetails.getIdentifier())){
-                    log.info("I am the guy responsible for the JOIN .YOU Find out where to place. Left or right.");
-                    log.info("Send JOIN OK");
-                    messToSend = "FINALOK LEAF";
+                        try {
+                            nodeSocket = getNodeSocket(nodeDetailsToSend.getIpAddress(), nodeDetailsToSend.getPort());
+                            sendDataToDestination(nodeSocket, messToSend);
+                            sendObjectToDestination(nodeSocket, receivedTempRoutingTable);
+                            isSent = true;
+                        } catch (IOException e) {
 
-                    try {
-                        nodeSocket = getNodeSocket(newIPRec,newPortRec);
-                        sendDataToDestination(nodeSocket,messToSend);
-                    } catch (IOException e) {
-                        log.error("Exception occurred when trying to send JOINOK to Node.");
-                        e.printStackTrace();
+                            //nodeMain.routingTable.get()
+                            log.error("Exception occurred when trying to send JOIN to Node. Node might be deleted. So remove it from the routing table and send the request again.");
+
+
+                        }
+
+
                     }
-
-                    try {
-                        sendObjectToDestination(nodeSocket,nodeMain.leafLeft);
-                        sendObjectToDestination(nodeSocket, nodeMain.leafRight);
-                        sendObjectToDestination(nodeSocket,selfNodeDetails);
-                        sendObjectToDestination(nodeSocket, receivedTempRoutingTable);
-                    } catch (IOException e) {
-                        log.error("Exception occured when sending object output.");
-                        e.printStackTrace();
-                    }
-
-
-
-                    System.out.println("Path Travelled : "+pathTravelled);
-
-
-                }else{
-
-                    pathTravelled = pathTravelled + selfNodeDetails.getIdentifier()+"=>";
-                    messToSend = "JOIN "+ ++hops +" "+ newIPRec +" "+newPortRec+" "+newNickNameRec+" "+newIdentifierRec+" "+" "+pathTravelled;
-
-                    try {
-                        nodeSocket = getNodeSocket(nodeDetailsToSend.getIpAddress(),nodeDetailsToSend.getPort());
-                        sendDataToDestination(nodeSocket,messToSend);
-                        sendObjectToDestination(nodeSocket, receivedTempRoutingTable);
-                    } catch (IOException e) {
-                        log.error("Exception occurred when trying to send JOIN to Node.");
-                        e.printStackTrace();
-                    }
-
-
                 }
 
 
@@ -432,9 +436,6 @@ public class NodeServer implements  Runnable{
 
                 }
 
-
-
-
             }
 
 
@@ -478,28 +479,7 @@ public class NodeServer implements  Runnable{
 
         }
 
-        /*else if(requestType.equals("NEWNODETABLE")) {
-
-            int numberOfRows = Integer.parseInt(tokens[1].trim());
-            String rowNumbersTemp = tokens[2].trim();
-            String[] rows = rowNumbersTemp.split(",");
-
-            for (int i = 0; i <numberOfRows; i++) {
-                try {
-                    ArrayList<NodeDetails> allNodesDetailRow = (ArrayList<NodeDetails>) receiveObjectFromDestination(socket);
-                    updateRoutingTable(allNodesDetailRow,rows[i]);
-                    log.info("Routing Table updated. Send a message all the Nodes in the routing table about update.");
-
-                    sendRoutingTableUpdateToNodes();
-
-                } catch (IOException e) {
-                    log.error("Excepection occured when trying to retrievie data from destnation");
-
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            }
-        }*/else if(requestType.equals("ROUTINGTABLECONV")){
+        else if(requestType.equals("ROUTINGTABLECONV")){
 
             String rcvdIdentifier = tokens[1].trim();
             int rowNumber = Integer.parseInt(tokens[2].trim());
@@ -574,6 +554,10 @@ public class NodeServer implements  Runnable{
             }else if(typeOfOperation.equals("FILERET")){
 
                 // TO DO Retreive operation.
+
+
+
+
 
 
             }
@@ -919,149 +903,6 @@ public class NodeServer implements  Runnable{
         return closestIndex;
     }
 
-
-
-    /*private int getNumericallyCloserIndex(int numberPrefixMatching,String newIdentifier){
-
-
-        ArrayList<NodeDetails> nodeDetailsArrayList = nodeMain.routingTable.get(numberPrefixMatching);
-
-        ArrayList<Integer> allIdentifiers = getAllIdentifiersIntegers(nodeDetailsArrayList);
-
-
-        int selfNodeIdentifierInt = Integer.parseInt(selfNodeDetails.getIdentifier(), 16);
-
-        int arrLastValue = allIdentifiers.get(allIdentifiers.size() - 1);
-        int arrFirstValue = allIdentifiers.get(0);
-        //System.out.println("size "+allIdentifiers.size());
-
-        int finalValue = Integer.parseInt("FFFF", 16);
-        int newIdentifierInt = Integer.parseInt(newIdentifier, 16);
-
-        int numbericallyCloserIndex = 0;
-
-        if (newIdentifierInt < allIdentifiers.get(0)) {
-            //System.out.println("The value is before the first value in the list.");
-
-            if ((arrFirstValue - newIdentifierInt) <= ((finalValue - arrLastValue) + newIdentifierInt)) {
-                //System.out.println("Value closer or equal is the first value.----" + allIdentifiers.get(0));
-                log.info("First value is the closer or equal "+allIdentifiers.get(0));
-                int closestMath = allIdentifiers.get(0);
-                String closestMathHex = Integer.toHexString(closestMath);
-
-                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
-                int i=0;
-                while(itr.hasNext()){
-                    NodeDetails nodeDetailsTemp = itr.next();
-
-                    if(nodeDetailsTemp.getIdentifier()!=null) {
-                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex)) {
-                            numbericallyCloserIndex = i;
-                            break;
-                        }
-                    }
-                    i++;
-                }
-
-            } else {
-                log.info("Last value is closer :" + allIdentifiers.get(allIdentifiers.size() - 1));
-                int closestMath = allIdentifiers.get(allIdentifiers.size() - 1);
-                String closestMathHex = Integer.toHexString(closestMath);
-
-                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
-                int i=0;
-                while(itr.hasNext()){
-                    NodeDetails nodeDetailsTemp = itr.next();
-
-                    if(nodeDetailsTemp.getIdentifier()!=null) {
-                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex)) {
-                            numbericallyCloserIndex = i;
-                            break;
-                        }
-                    }
-                    i++;
-                }
-
-            }
-
-        } else if (newIdentifierInt > allIdentifiers.get(allIdentifiers.size() - 1)) {
-            //System.out.println("The value is greater than the last value in the list. ");
-            System.out.println("compare - arrlastvalue " + (newIdentifierInt - arrLastValue) + " ((finishvalue-compare)+arrfirstvalue ) " + ((finalValue - newIdentifierInt) + arrFirstValue));
-
-            if ((newIdentifierInt - arrLastValue) < ((finalValue - newIdentifierInt) + arrFirstValue)) {
-                int closestMath = allIdentifiers.get(allIdentifiers.size() - 1);
-                String closestMathHex = Integer.toHexString(closestMath);
-                System.out.println("value closer to the last value in array .... " + allIdentifiers.get(allIdentifiers.size() - 1)+" In hex "+closestMathHex.toUpperCase());
-
-                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
-                int i=0;
-                while(itr.hasNext()){
-                    NodeDetails nodeDetailsTemp = itr.next();
-
-                    if(nodeDetailsTemp.getIdentifier()!=null) {
-                        System.out.println("node detail temp " + nodeDetailsTemp.getIdentifier() + " closestMathhex " + closestMathHex);
-
-                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex.toUpperCase())) {
-                            numbericallyCloserIndex = i;
-                            break;
-                        }
-                    }
-                    i++;
-                }
-
-
-                System.out.println("numberCloserInde "+ numbericallyCloserIndex);
-            } else {
-                System.out.println("Equal or closer is the first value in the array ::: " + allIdentifiers.get(0));
-
-
-                int closestMath = allIdentifiers.get(0);
-                String closestMathHex = Integer.toHexString(closestMath);
-                Iterator<NodeDetails> itr = nodeMain.routingTable.get(numberPrefixMatching).iterator();
-                int i=0;
-                while(itr.hasNext()){
-                    NodeDetails nodeDetailsTemp = itr.next();
-
-                    if(nodeDetailsTemp.getIdentifier()!=null) {
-                        System.out.println("node detail temp " + nodeDetailsTemp.getIdentifier() + " closestMathhex 000" + closestMathHex);
-
-                        if (nodeDetailsTemp.getIdentifier().equals(closestMathHex.toUpperCase())) {
-                            numbericallyCloserIndex = i;
-                            break;
-                        }
-                    }
-                    i++;
-                }
-
-            }
-        } else {
-            System.out.println("The value falls between two nodes that are already present.");
-
-            System.out.println(allIdentifiers.get(0)+" "+allIdentifiers.get(1)+" "+newIdentifierInt);
-            int oldvalue = Math.abs(allIdentifiers.get(0) - newIdentifierInt);
-            int index = 0;
-            int newvale = 0;
-            for (int i = 1; i < allIdentifiers.size(); i++) {
-                newvale = Math.abs(allIdentifiers.get(i) - newIdentifierInt);
-
-                if (newvale <= oldvalue) {
-                    oldvalue = newvale;
-                    index = i;
-
-                }
-
-            }
-            numbericallyCloserIndex = index;
-            System.out.println("New value "+newvale);
-            System.out.println("oldvalue " + oldvalue + " index " + index + " value " + allIdentifiers.get(numbericallyCloserIndex));
-
-
-        }
-
-        return numbericallyCloserIndex;
-
-
-    }*/
 
     private ArrayList<String> getAllIdentifiersInRow(ArrayList<NodeDetails> allNodesInRow){
 

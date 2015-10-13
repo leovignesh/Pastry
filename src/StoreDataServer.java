@@ -72,11 +72,15 @@ public class StoreDataServer implements  Runnable{
                 // Send request to the destingation. for se
                 // save it locally. and check if it is proper.
 
+
+
             }
 
         }
 
     }
+
+
     
 
     private void sendFileToClosestPlace(){

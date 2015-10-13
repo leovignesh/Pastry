@@ -105,6 +105,8 @@ public class StoreDataClient implements Runnable{
 
                 getClosestServer("FILERET");
 
+                break;
+
         }
 
     }
