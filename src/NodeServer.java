@@ -364,6 +364,7 @@ public class NodeServer implements  Runnable{
         	int leftOrRight= Integer.parseInt(tokens[1].trim());
 
             NodeDetails nodeDetails=null;
+            NodeDetails nodeRemoved = null;
 
             try {
                 nodeDetails = (NodeDetails) receiveObjectFromDestination(socket);
@@ -374,42 +375,25 @@ public class NodeServer implements  Runnable{
                 log.error("Exception occured when getting the object of leaf set");
                 e.printStackTrace();
             }
-            
-            System.out.println("left nodes before upading : "+nodeMain.leafLeft.getIdentifier());
-            System.out.println("Right nodes before upading : "+nodeMain.leafRight.getIdentifier());
-
-
 
         	
         	if(leftOrRight==1){
         		log.info("update my right leaf with the receivd right.");
 
         		// update my Right to the received Right
+                nodeRemoved = nodeMain.leafRight;
         		nodeMain.leafRight = nodeDetails;
 
-                System.out.println("recd right : "+nodeDetails.getIdentifier());
-                //System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
-                System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
-        		
         		
         	}else if(leftOrRight==0){
         		log.info("update my left the received left.");
         		
         		// Update my left to Received left
+                nodeRemoved = nodeMain.leafRight;
         		nodeMain.leafLeft = nodeDetails;
 
-                System.out.println("Node left "+nodeDetails.getIdentifier());
-                System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
-                //System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
-        		
         	}
-        	
-        	System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
-            System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
-            
-        	
-        	
-        	
+
         }
 
         /*else if(requestType.equals("NEWNODETABLE")) {
@@ -528,7 +512,7 @@ public class NodeServer implements  Runnable{
             //receive the file from destination.
             String fileName = tokens[1].trim();
             String fileNameHash = tokens[2].trim();
-            int fileSize = Integer.parseInt(tokens[3].trim());
+            //int fileSize = Integer.parseInt(tokens[3].trim());
 
             DataInputStream dataInputStream = null;
 
