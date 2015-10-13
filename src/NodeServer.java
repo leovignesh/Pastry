@@ -357,6 +357,88 @@ public class NodeServer implements  Runnable{
                 nodeMain.leafLeft = nodeDetails;
             }
 
+            // See the files that are applicable for the node that joined and send him the files.
+            // Remove from the files datastructre.
+
+            // Delete the files from the storage /s/
+
+            // Find the files in the system and disperse it.
+
+            Set<String> fileKeys = nodeMain.fileStoredDetails.keySet();
+
+
+            if(fileKeys.size()==0){
+                System.out.println("No files stored in the system.");
+            }else{
+
+                Iterator<String> itr2 = fileKeys.iterator();
+                while (itr2.hasNext()){
+                    String hashIdentifier = itr2.next();
+
+                    String nodeIdentifier = nodeDetails.getIdentifier();
+                    String selfIdentifier = selfNodeDetails.getIdentifier();
+
+                    String closestValue = closestMatch(hashIdentifier,nodeIdentifier,selfIdentifier);
+
+                    // prepare to send the data.
+                    File file = new File(StoreDataStart.fileName);
+                    FileInputStream fileInputStream = null;
+                    try {
+                        fileInputStream = new FileInputStream(file);
+                    }catch (IOException e){
+                        log.error("Exception occured when trying to get the stream.");
+                    }
+
+                    int fileSize = (int)file.length();
+                    byte[] fileByte = new byte[(int) fileSize];
+
+                    try {
+                        int numberRead = fileInputStream.read(fileByte, 0, fileSize);
+                    } catch (IOException e) {
+                        log.error("Exception occured when trying to read bytes.");
+                        e.printStackTrace();
+                    }
+
+                    String messToSend = "FILEDATA "+nodeMain.fileStoredDetails.get(hashIdentifier)+" "+hashIdentifier+" "+fileSize;
+
+
+                    if(closestValue.equals(nodeIdentifier)){
+
+                        log.info("Send the file to the New node.");
+                        try {
+                            Socket nodeSocket = getNodeSocket(nodeDetails.getIpAddress(), nodeDetails.getPort());
+                            sendDataToDestination(nodeSocket, messToSend);
+
+                            // Send the files to the node.
+
+                            DataOutputStream dataOutputStream = new DataOutputStream(nodeSocket.getOutputStream());
+                            dataOutputStream.writeInt(fileSize);
+                            dataOutputStream.write(fileByte,0,fileSize);
+                            dataOutputStream.flush();
+
+                        } catch (IOException e) {
+                            log.error("Exception occured when trying to send removal message.");
+                            e.printStackTrace();
+                        }
+
+                        log.info(" File datastrucutre  before "+nodeMain.fileStoredDetails.size());
+                        nodeMain.fileStoredDetails.remove(hashIdentifier);
+                        log.info(" File datastrucutre after "+nodeMain.fileStoredDetails.size());
+
+                    }else {
+                        log.info("Keep the file locally. I am the closer.");
+                    }
+
+
+                }
+
+
+
+
+            }
+
+
+
 
 
         }else if(requestType.equals("REMNODELEAFUPDATE")){

@@ -167,6 +167,12 @@ public class NodeClient implements  Runnable{
                             int fileSize = (int)file.length();
                             byte[] fileByte = new byte[(int) fileSize];
 
+                            try {
+                                int numberRead = fileInputStream.read(fileByte, 0, fileSize);
+                            } catch (IOException e) {
+                                log.error("Exception occured when trying to copy the bytes.");
+                                e.printStackTrace();
+                            }
 
                             String messToSend = "FILEDATA "+nodeMain.fileStoredDetails.get(hashIdentifier)+" "+hashIdentifier+" "+fileSize;
 
