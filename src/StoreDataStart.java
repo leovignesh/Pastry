@@ -1,15 +1,22 @@
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * Created by leo on 10/10/15.
  */
 public class StoreDataStart {
 
+	private static String selfIP;
     private int selfPort;
     private String discoveryIP;
     private int discoveryPort;
+    
+    public static String fileName;
+    public static String hashFileName;
 
     private ServerSocket serverSocket=null;
     private Socket socket = null;
@@ -32,7 +39,7 @@ public class StoreDataStart {
 
     public void startStoreData(){
 
-        StoreDataClient storeDataClient = new StoreDataClient(selfPort,discoveryIP,discoveryPort);
+        StoreDataClient storeDataClient = new StoreDataClient(selfIP,selfPort,discoveryIP,discoveryPort);
         Thread thread = new Thread(storeDataClient);
         thread.start();
 
@@ -58,10 +65,16 @@ public class StoreDataStart {
 
     public static void main(String[] args) {
 
-        if(args.length != 1){
+        if(args.length != 3){
             throw new IllegalArgumentException("Parameter(s): <Self Port><Discovery IP ><Discovery Port>" );
         }
 
+        try {
+			selfIP = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			System.out.println("Exception occured when trying to get the local address.");
+			e.printStackTrace();
+		}
         StoreDataStart storeDataStart = new StoreDataStart(Integer.parseInt(args[0]),args[1].trim(),Integer.parseInt(args[2].trim()));
         storeDataStart.startStoreData();
     }

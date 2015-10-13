@@ -2,6 +2,8 @@ import org.apache.log4j.Logger;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -50,47 +52,64 @@ public class StoreDataServer implements  Runnable{
 
         if(requestType.equals("CLOSESTSERVER")){
 
+        	String request = tokens[1].trim();
             closestIp = tokens[2].trim().split(":")[0];
             closestPort = Integer.parseInt(tokens[2].trim().split(":")[1]);
             closestIdentifier = tokens[3].trim();
-            String request = tokens[4].trim();
+            String pathTravelled = tokens[4].trim();
+            
 
             log.info("ClosestIP : "+closestIp+" Closest Port : "+closestPort+" Closest Identifier : "+closestIdentifier);
 
             if(request.equals("FILESAVE")){
 
                 // Send the file to the destination. Enable it after wards.
-                //sendFileToClosestPlace("FILESAVE");
+                sendFileToClosestPlace();
+            	
 
             }else if(request.equals("FILERET")){
 
                 // Send request to the destingation. for se
-                //sendFileToClosestPlace("FILERET");
-
                 // save it locally. and check if it is proper.
 
             }
 
-
-
         }
 
     }
+    
 
+    private void sendFileToClosestPlace(){
 
-    private void sendFileToClosestPlace(String type){
+    	int fileSize=0; 
+    	byte[] fileByte=null;
+    	String messToSend="";
+    	
+    	try{
 
-
-        try {
+            File file = new File(StoreDataStart.fileName);
+            FileInputStream fileInputStream = new FileInputStream(file);
+            fileSize = (int)file.length();
+            fileByte = new byte[(int) fileSize];
+            int numberRead = fileInputStream.read(fileByte, 0, fileSize);
+            
+            messToSend = "FILEDATA "+StoreDataStart.fileName+" "+StoreDataStart.hashFileName+" "+fileSize;
+            
+            // Send the node that a file is coming
             nodeSocket = getSocket(closestIp,closestPort);
-            sendDataToDestination(nodeSocket,type);
+            sendDataToDestination(nodeSocket,messToSend);
+            
             // Send the actual File.
-
-        } catch (IOException e) {
-            log.error("Exception occured when getting closest IP and Port");
-            e.printStackTrace();
+            
+            DataOutputStream dataOutputStream = new DataOutputStream(nodeSocket.getOutputStream());
+            dataOutputStream.writeInt(fileSize);
+            dataOutputStream.write(fileByte,0,fileSize);
+            dataOutputStream.flush();
+            
+        }catch (IOException e){
+            log.error("Exceptin occured when reading from a file.");
         }
-
+    	
     }
 
     private void sendDataToDestination(Socket socket,String messageToSend) throws IOException{

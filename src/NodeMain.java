@@ -44,6 +44,7 @@ public class NodeMain {
 
     // Datastructues
     public static Map<Integer,ArrayList<NodeDetails>> routingTable = new ConcurrentHashMap<Integer,ArrayList<NodeDetails>>();
+    public static Map<String,String> fileStoredDetails = new ConcurrentHashMap<String, String>();
 
 
     // Leafset

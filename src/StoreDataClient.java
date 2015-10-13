@@ -15,6 +15,7 @@ public class StoreDataClient implements Runnable{
     private Socket socket;
 
 
+    private String selfIP;
     private int selfPort;
     private String discoveryIP;
     private int discoveryPort;
@@ -23,10 +24,9 @@ public class StoreDataClient implements Runnable{
     private int randomPort;
     private String randomIdentifier;
 
-    private String selfFileIdentifier;
 
-    public StoreDataClient(int selfPort, String discoveryIP,int discoveryPort){
-
+    public StoreDataClient(String selfIP,int selfPort, String discoveryIP,int discoveryPort){
+    	this.selfIP = selfIP;
         this.selfPort = selfPort;
         this.discoveryIP = discoveryIP;
         this.discoveryPort = discoveryPort;
@@ -35,7 +35,9 @@ public class StoreDataClient implements Runnable{
 
     @Override
     public void run() {
-        startClient();
+    	while(true){
+    		startClient();
+    	}
     }
 
 
@@ -68,32 +70,23 @@ public class StoreDataClient implements Runnable{
             case 1:
                 System.out.println("Enter the File Name to be loaded :");
                 scanner = new Scanner(System.in);
+                
                 String fileDetails = scanner.nextLine();
+                
 
                 String[] fileNameSplit = fileDetails.split(" ");
-                String fileName = fileNameSplit[0].trim();
+                StoreDataStart.fileName = fileNameSplit[0].trim();
 
+                System.out.println("fileNameDetails "+fileDetails);
+                
                 if(fileNameSplit.length>1){
-                    selfFileIdentifier = fileNameSplit[1].trim();
+                    StoreDataStart.hashFileName = fileNameSplit[1].trim();
+                }else{
+                	StoreDataStart.hashFileName = computeCheckSum();
                 }
 
-                if(selfFileIdentifier==null){
-                    selfFileIdentifier = computeCheckSum();
-                }
-
+                System.out.println("hashfilename .."+StoreDataStart.hashFileName);
                 getClosestServer("FILESAVE");
-
-                try{
-
-                    File file = new File(fileName);
-                    FileInputStream fileInputStream = new FileInputStream(file);
-                    long fileSize = file.length();
-
-
-                }catch (IOException e){
-                    log.error("Exceptin occured when reading from a file.");
-                    System.out.println();
-                }
 
                 break;
 
@@ -107,7 +100,7 @@ public class StoreDataClient implements Runnable{
                 String fileNameRet = fileDetailsRetSplit[0].trim();
 
                 if(fileDetailsRetSplit.length>1){
-                    selfFileIdentifier = fileDetailsRetSplit[1].trim();
+                	StoreDataStart.hashFileName = fileDetailsRetSplit[1].trim();
                 }
 
                 getClosestServer("FILERET");
@@ -151,7 +144,7 @@ public class StoreDataClient implements Runnable{
     private void getClosestServer(String type){
 
         getRandomIP();
-        String messToSend = "GETNODE "+type+" "+selfFileIdentifier;
+        String messToSend = "GETNODE "+type+" "+StoreDataStart.hashFileName+" "+selfIP+" "+selfPort+" "+"Start=>";
         try {
             socket = getSocket(randomIp,randomPort);
             sendDataToDestination(socket,messToSend);

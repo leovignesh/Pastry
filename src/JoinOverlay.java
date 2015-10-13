@@ -3,6 +3,8 @@ import org.apache.log4j.Logger;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
@@ -44,9 +46,10 @@ public class JoinOverlay implements  Runnable{
             log.error("Exception occured when trying to get peer socket.");
         }
 
-        String messToSend = "JOIN 0 "+selfNodeDetails.getIpAddress()+" "+selfNodeDetails.getPort()+" "+selfNodeDetails.getNickName()+" "+selfNodeDetails.getIdentifier();
+        String messToSend = "JOIN 0 "+selfNodeDetails.getIpAddress()+" "+selfNodeDetails.getPort()+" "+selfNodeDetails.getNickName()+" "+selfNodeDetails.getIdentifier()+" START=>";
         try {
             sendDataToDestination(peerSocket,messToSend);
+            sendObjectToDestination(peerSocket,NodeMain.routingTable);
         } catch (IOException e) {
             e.printStackTrace();
             log.error("Exception occured when trying to send JOIN message to Peer.");
@@ -81,6 +84,13 @@ public class JoinOverlay implements  Runnable{
 
         return new String(data);
     }
+    
+    private void sendObjectToDestination(Socket socket,Object object) throws IOException{
 
+        ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+        objectOutputStream.writeObject(object);
+        objectOutputStream.flush();
+
+    }
 
 }
