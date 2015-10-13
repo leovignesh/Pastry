@@ -165,6 +165,51 @@ public class NodeMain {
         nodeMain.startNode();
 
     }
+    
+    public boolean unRegisterNode(){
+    	
+    	Socket discoverSocket = null;
+        String messRcvd = null;
+        boolean unRegSuccess = false;
+        
+        
+        try {
+			discoverSocket = getSocket(discoverIP, discoverPort);
+		} catch (IOException e) {
+			log.error("Cannot connect to the discovery node.");
+			e.printStackTrace();
+			return unRegSuccess;
+		}
+        
+        
+        String messToSend = "UNREG " + selfIP + " " + selfPort + " " + selfnickName + " " + selfIdentifier;
+        log.info("Unregister message to send to discovery Node : "+messToSend);
+
+        try {
+            sendDataToDestination(discoverSocket, messToSend);
+            messRcvd = receiveDataFromDestination(discoverSocket);
+
+        }catch (Exception e){
+            log.error("Exception occured when trying to send message to discovery node");
+            //e.printStackTrace();
+        }finally {
+            // Disconnect the socket.
+            try {
+                discoverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        log.info("Message received From discover node : "+messRcvd);
+
+        if(messRcvd.equals("UNREGSUCCESS")){
+        	return true;
+        }
+        return false;
+        
+    	
+    }
 
 
     public boolean registerNode(){

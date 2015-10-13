@@ -122,7 +122,7 @@ public class NodeServer implements  Runnable{
                  if it doesnt fall within the leafset, then chk the routing*/
 
 
-                System.out.println("Token size "+tokens.length);
+
 
                 String messToSend =null;
                 NodeDetails nodeDetailsToSend = lookup(newIdentifierRec);
@@ -130,68 +130,6 @@ public class NodeServer implements  Runnable{
                 int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
                 char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
 
-                System.out.println("Number of mathcing prefix "+numberPrefixMatching);
-
-                /*ArrayList<Integer> matching = new ArrayList<Integer>();
-
-                for(int i=0;i<=numberPrefixMatching;i++){
-                    matching.add(i);
-                }
-
-                System.out.println("Matching size init "+matching.size());*/
-
-                /*String rownumbers = "";
-                // Remove the items already sent
-                Iterator<Integer> itr = matching.iterator();
-                while(itr.hasNext()){
-
-                    int valuetemp = itr.next();
-                    if(valuetemp<=rowNumberAlreadySent){
-                        itr.remove();
-                    }else {
-                        rownumbers = rownumbers+valuetemp+",";
-                    }
-
-                }
-
-
-                System.out.println("Matching after removing init "+matching.size());
-
-                if(matching.size()!=0) {
-
-                    messToSend = "NEWNODETABLE "+matching.size()+" "+rownumbers.substring(0,rownumbers.length()-1);
-                    System.out.println("Message to send is "+messToSend);
-
-                    try {
-                        nodeSocket = getNodeSocket(newIPRec, newPortRec);
-                        sendDataToDestination(nodeSocket, messToSend);
-                    } catch (IOException e) {
-                        log.info("Exception occured when trying to send the routing table details.");
-
-                        e.printStackTrace();
-                    }
-
-
-                    Iterator<Integer> itrmatch = matching.iterator();
-                    while (itrmatch.hasNext()){
-                        Integer matchValue = itrmatch.next();
-                        System.out.println("Mathing value here "+matchValue);
-
-                        try {
-                            sendObjectToDestination(nodeSocket, nodeMain.routingTable.get(matchValue));
-
-                        } catch (IOException e) {
-                            log.error("Exception occured when trying to send object to Node.");
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                }
-
-                rowNumberAlreadySent = numberPrefixMatching;
-                
-                */
 
                 // update the routing table.
 
@@ -292,15 +230,12 @@ public class NodeServer implements  Runnable{
 
 
 
-                // Second node. If both the selfNode Identifier and the received are equal. So update the leaf set and routing table.
+                // Second node. If both the selfNode Identifier and the received are equal. So update the leaf set.
                 if(nodeleft.getIdentifier().equals(selfNodeDetails.getIdentifier()) && nodeRight.getIdentifier().equals(selfNodeDetails.getIdentifier())){
-                    System.out.println("Second node. So update the leaf set to the first node. ");
+
+                    log.info("Second node. So update the leaf set to the first node. ");
                     nodeMain.leafLeft = new NodeDetails(nodeFinal.getIpAddress(),nodeFinal.getPort(),nodeFinal.getIdentifier(),nodeFinal.getNickName());
                     nodeMain.leafRight = new NodeDetails(nodeFinal.getIpAddress(),nodeFinal.getPort(),nodeFinal.getIdentifier(),nodeFinal.getNickName());
-
-                    // Update the routing table
-                    int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),nodeFinal.getIdentifier());
-                    char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),nodeFinal.getIdentifier());
 
 
                 }else{
@@ -332,7 +267,7 @@ public class NodeServer implements  Runnable{
                     if(clockwise){
                         //destinationSendLeaf = nodeleft;
 
-                        System.out.println("Clockwise");
+                        log.info("Clockwise");
                         nodeMain.leafLeft= nodeFinal;
                         nodeMain.leafRight = nodeRight;
 
@@ -361,11 +296,9 @@ public class NodeServer implements  Runnable{
                         }
 
 
-
-
                     }else{
                         //destinationSendLeaf = nodeRight;
-                        System.out.println("Anticlockwise.");
+                        log.info("Anticlockwise.");
                         nodeMain.leafLeft=nodeleft;
                         nodeMain.leafRight = nodeFinal;
 
@@ -394,9 +327,6 @@ public class NodeServer implements  Runnable{
                         }
 
 
-
-
-                        System.out.println("send message to the nodeleft about change.");
                     }
 
 
@@ -429,6 +359,57 @@ public class NodeServer implements  Runnable{
 
 
 
+        }else if(requestType.equals("REMNODELEAFUPDATE")){
+        	
+        	int leftOrRight= Integer.parseInt(tokens[1].trim());
+
+            NodeDetails nodeDetails=null;
+
+            try {
+                nodeDetails = (NodeDetails) receiveObjectFromDestination(socket);
+
+            }catch (IOException e){
+                log.error("Exception occured when getting the object form source.");
+            } catch (ClassNotFoundException e) {
+                log.error("Exception occured when getting the object of leaf set");
+                e.printStackTrace();
+            }
+            
+            System.out.println("left nodes before upading : "+nodeMain.leafLeft.getIdentifier());
+            System.out.println("Right nodes before upading : "+nodeMain.leafRight.getIdentifier());
+
+
+
+        	
+        	if(leftOrRight==1){
+        		log.info("update my right leaf with the receivd right.");
+
+        		// update my Right to the received Right
+        		nodeMain.leafRight = nodeDetails;
+
+                System.out.println("recd right : "+nodeDetails.getIdentifier());
+                //System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
+                System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
+        		
+        		
+        	}else if(leftOrRight==0){
+        		log.info("update my left the received left.");
+        		
+        		// Update my left to Received left
+        		nodeMain.leafLeft = nodeDetails;
+
+                System.out.println("Node left "+nodeDetails.getIdentifier());
+                System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
+                //System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
+        		
+        	}
+        	
+        	System.out.println("left nodes after upading : "+nodeMain.leafLeft.getIdentifier());
+            System.out.println("Right nodes after upading : "+nodeMain.leafRight.getIdentifier());
+            
+        	
+        	
+        	
         }
 
         /*else if(requestType.equals("NEWNODETABLE")) {
@@ -480,7 +461,7 @@ public class NodeServer implements  Runnable{
             int storePortToSend = Integer.parseInt(tokens[4].trim());
             String pathTravelled = tokens[5].trim();
 
-            System.out.println("GETNODE received............");
+            //System.out.println("GETNODE received............");
 
             // Check the closest node and append the path travelled.
             NodeDetails fileNodeDetails = lookup(identifierFile);
@@ -574,9 +555,6 @@ public class NodeServer implements  Runnable{
                 System.out.println("Exception occured when trying to get the file.");
                 e.printStackTrace();
             }
-
-
-
 
         }
 
@@ -699,7 +677,7 @@ public class NodeServer implements  Runnable{
         int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
 
         log.info("Right "+nodeMain.leafRight.getIdentifier()+" left "+nodeMain.leafLeft.getIdentifier()+" rcvd "+newIdentifierRec);
-        log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
+        //log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
 
         boolean betweenleafs = true;
         NodeDetails  nodedetailsTemp = null;
@@ -720,8 +698,6 @@ public class NodeServer implements  Runnable{
 
             log.info("Numer of prefix matching "+numberPrefixMatching+" firstnonmatching prefix "+firstNonMatchingPrefixInt);
 
-            log.info("Value in the arralist "+nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIpAddress());
-
             int index = firstNonMatchingPrefixInt;
             String messToSend =null;
             // Find the numerically closest guy from routing table and send it to that guy.
@@ -733,11 +709,11 @@ public class NodeServer implements  Runnable{
 
                 log.info("No entry in the non matching cell. So check for closest.");
                 index = getNumericallyCloserIndex(numberPrefixMatching,newIdentifierRec);
-                System.out.println("Closest index received "+index+" routing table "+nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier()+" self node "+selfNodeDetails.getIdentifier());
+                //System.out.println("Closest index received "+index+" routing table "+nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier()+" self node "+selfNodeDetails.getIdentifier());
 
                 if(nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier().equals(selfNodeDetails.getIdentifier())){
 
-                    log.info("I am closest. So will place him near");
+                    log.info("Check if I am the closer or the leaf sets are closer.");
                     // Check the leaf set to see who is closer. 
 
                     String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
@@ -842,18 +818,18 @@ public class NodeServer implements  Runnable{
             closestIndex++;
         }
 
-        System.out.println("size of all identifier "+allIdentifierString.size());
-        System.out.println("First item value "+closetValue);
+        /*System.out.println("size of all identifier "+allIdentifierString.size());
+        System.out.println("First item value "+closetValue);*/
 
         if(allIdentifierString.size()>1) {
 
-            System.out.println("More than one item in the row found.");
+            //System.out.println("More than one item in the row found.");
             for(int i=0;i<nodeDetailsArrayList.size();i++){
 
 
                 if(nodeDetailsArrayList.get(i).getIdentifier()!=null){
 
-                    System.out.println("value in the identifier "+nodeDetailsArrayList.get(i).getIdentifier()+" closestvalue :: "+closetValue+" i value "+i);
+                    //System.out.println("value in the identifier "+nodeDetailsArrayList.get(i).getIdentifier()+" closestvalue :: "+closetValue+" i value "+i);
 
 
                     if(!nodeDetailsArrayList.get(i).getIdentifier().equals(closetValue)){
@@ -862,9 +838,9 @@ public class NodeServer implements  Runnable{
                         if(closetValue.equals(secondValue)){
                             closestIndex = i;
                         }
-                        System.out.println("Second value "+secondValue+" closer value "+closetValue+" closet index "+i);
+                        //System.out.println("Second value "+secondValue+" closer value "+closetValue+" closet index "+i);
                     }else{
-                        System.out.println("FirstValue found. So leaving it. "+ nodeDetailsArrayList.get(i).getIdentifier());
+                        //System.out.println("FirstValue found. So leaving it. "+ nodeDetailsArrayList.get(i).getIdentifier());
                     }
 
                 }
@@ -872,7 +848,7 @@ public class NodeServer implements  Runnable{
             }
 
         }
-        System.out.println("Closest index is "+closestIndex);
+        //log.info("Closest index  :  "+closestIndex);
 
         return closestIndex;
     }

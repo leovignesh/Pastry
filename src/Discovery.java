@@ -58,8 +58,9 @@ public class Discovery implements Runnable{
             String ipAddress = tokens[1].trim();
             int port = Integer.parseInt(tokens[2].trim());
             String nickName = tokens[3].trim();
+            String identifier = tokens[4].trim();
 
-            UnRegisterNode registerNode = new UnRegisterNode(socket,this,ipAddress,port,nickName);
+            UnRegisterNode registerNode = new UnRegisterNode(socket,this,ipAddress,port,nickName,identifier);
             Thread thread = new Thread(registerNode);
             thread.start();
         }else if(requestType.equals("DATASTORE")){

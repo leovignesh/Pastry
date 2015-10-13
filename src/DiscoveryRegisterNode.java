@@ -61,6 +61,16 @@ public class DiscoveryRegisterNode implements  Runnable{
         }
 
 
+         //Testing remove it.
+        if(identifier.equals("1600")){
+
+            messToSend = "REGSUCCESS 1 " + "129.82.46.193:4567 augusta 1000";
+
+        }else if(identifier.equals("1234")){
+            messToSend = "REGSUCCESS 1 " + "129.82.46.190:4567 augusta 2000";
+        }else if(identifier.equals("3999")){
+            messToSend = "REGSUCCESS 1 " + "129.82.46.199:4567 augusta 6000";
+        }
         // send to the Node that requested.
         sendDataToDestination(socket,messToSend);
 
