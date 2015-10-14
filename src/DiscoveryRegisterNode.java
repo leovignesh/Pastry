@@ -56,6 +56,13 @@ public class DiscoveryRegisterNode implements  Runnable{
                     messToSend = "REGSUCCESS 1 " + discovery.getRandomIpDetails(1);
                     discovery.nodeDetails.put(ipAddress, discoveryNodeDetails);
                     discovery.allIdentifier.add(identifier);
+
+
+                    System.out.println("REGISTRATION SUCCESSFUL : "+identifier);
+                    System.out.println("IP ADDRESS : "+ipAddress);
+                    System.out.println("PORT : "+port);
+                    System.out.println("NICK NAME : "+nickName);
+
                 }
             }
         }

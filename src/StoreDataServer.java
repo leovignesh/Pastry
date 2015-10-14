@@ -65,8 +65,18 @@ public class StoreDataServer implements  Runnable{
 
             if(request.equals("FILESAVE")){
 
+                int hops = Integer.parseInt(tokens[5].trim());
+
+                System.out.println("RANDOM GUY TO BE CONTACTED : "+closestIdentifier);
+                System.out.println("IDENTIFIER OF THE FILE  : "+StoreDataStart.hashFileName);
+                System.out.println("FILE NAME : "+StoreDataStart.fileName);
+                System.out.println("PATH TRAVELLED : "+ pathTravelled);
+                System.out.println("HOPS : "+hops);
+
                 // Send the file to the destination. Enable it after wards.
                 sendFileToClosestPlace();
+
+
             	
 
             }else if(request.equals("FILERET")){
@@ -77,6 +87,7 @@ public class StoreDataServer implements  Runnable{
             	String fileName = tokens[5].trim();
             	String identifierFileName = tokens[6].trim();
             	String fileFound = tokens[7].trim();
+                int hops = Integer.parseInt(tokens[8].trim());
             	
             	if(fileFound.equals("FILEFOUND")){
             	
@@ -94,16 +105,22 @@ public class StoreDataServer implements  Runnable{
 	                    FileOutputStream fileOutputStream = new FileOutputStream(newFileName);
 	                    fileOutputStream.write(data1);
 	                    fileOutputStream.close();
-	                    log.debug("File "+ newFileName +" SAVED TO LOCATION.");
-	
+	                    log.debug("File " + newFileName + " SAVED TO LOCATION.");
+
+                        System.out.println("FILE NAME : "+identifierFileName);
+                        System.out.println("FILE SUCCESSSFULLY RETREIVED");
+                        System.out.println("PATH TRAVELLED : "+pathTravelled);
+                        System.out.println("HOPS : "+ hops);
+
 	                }catch(IOException e){
 	                    System.out.println("Exception occured when trying to get the file.");
 	                    e.printStackTrace();
 	                }
             	}else if(fileFound.equals("FILENOTFOUND")){
             		
-            		System.out.println("File not found at the destination. ");
-            		log.info("File not found at the destination. ");
+            		System.out.println("FILE NOT FOUND IN DESTINATION. ");
+            		System.out.println("PATH TRAVELLED : "+pathTravelled);
+                    System.out.println("HOPS : "+ hops);
             		
             	}
             	
@@ -133,7 +150,7 @@ public class StoreDataServer implements  Runnable{
             fileByte = new byte[(int) fileSize];
             int numberRead = fileInputStream.read(fileByte, 0, fileSize);
             
-            messToSend = "FILEDATA "+StoreDataStart.fileName+" "+StoreDataStart.hashFileName+" "+fileSize;
+            messToSend = "FILEDATA "+StoreDataStart.fileName+" "+StoreDataStart.hashFileName;
             
             // Send the node that a file is coming
             nodeSocket = getSocket(closestIp,closestPort);
@@ -145,6 +162,8 @@ public class StoreDataServer implements  Runnable{
             dataOutputStream.writeInt(fileSize);
             dataOutputStream.write(fileByte,0,fileSize);
             dataOutputStream.flush();
+
+            System.out.println("SUCCESSFULLY STORED  FILE TO "+closestIdentifier);
             
         }catch (IOException e){
         	e.printStackTrace();

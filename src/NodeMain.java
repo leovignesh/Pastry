@@ -89,7 +89,7 @@ public class NodeMain {
 
 
              // Start the client for giving input
-            NodeClient nodeClient = new NodeClient(this);
+            NodeClient nodeClient = new NodeClient(this,selfIdentifier,selfIP);
             Thread threadClient = new Thread(nodeClient);
             threadClient.start();
 

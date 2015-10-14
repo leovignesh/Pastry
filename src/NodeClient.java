@@ -12,12 +12,16 @@ import java.util.Set;
 public class NodeClient implements  Runnable{
 
     private NodeMain nodeMain;
+    private String selfIdentifier;
+    private String selfIP;
 
     // Logger Initialization
     Logger log = Logger.getLogger(NodeMain.class);
 
-    public NodeClient(NodeMain nodeMain){
+    public NodeClient(NodeMain nodeMain,String selfIdentifier,String selfIP){
         this.nodeMain = nodeMain;
+        this.selfIdentifier = selfIdentifier;
+        this.selfIP = selfIP;
     }
 
 
@@ -88,7 +92,7 @@ public class NodeClient implements  Runnable{
 
                 case 3:
                     System.out.println("***************");
-                    System.out.println("FILES IN NODE ");
+                    System.out.println("FILES IN NODE : ");
 
                     Set<String> keys = nodeMain.fileStoredDetails.keySet();
                     Iterator<String> itr1 = keys.iterator();
@@ -109,18 +113,22 @@ public class NodeClient implements  Runnable{
 
                     String ipAddressLeft = nodeMain.leafLeft.getIpAddress();
                     int portLeft = nodeMain.leafLeft.getPort();
+                    String identifierLeft = nodeMain.leafLeft.getIdentifier();
 
                     String ipAddressRight = nodeMain.leafRight.getIpAddress();
                     int portRight = nodeMain.leafRight.getPort();
+                    String identifierRight = nodeMain.leafRight.getIdentifier();
                 
                 	if(unRegStatus){
-                		log.debug("UNREGISTRATION SUCCESSFUL ");
+                        System.out.println("UNREGISTRATION SUCCESSFUL FROM DISOVERY");
 
                 		try {
                 			String messToSend = "REMNODELEAFUPDATE 1";
 							Socket nodeSocket = getNodeSocket(ipAddressLeft, portLeft);
 							sendDataToDestination(nodeSocket, messToSend);
                             sendObjectToDestination(nodeSocket, nodeMain.leafRight);
+
+                            System.out.println("UPDATE LEAFSET MESSAGE SENT TO : "+identifierLeft);
 
                         } catch (IOException e) {
                             log.error("Exception occured when trying to send removal message.");
@@ -132,6 +140,8 @@ public class NodeClient implements  Runnable{
                             Socket nodeSocket1 = getNodeSocket(ipAddressRight, portRight);
                             sendDataToDestination(nodeSocket1, messToSend);
                             sendObjectToDestination(nodeSocket1, nodeMain.leafLeft);
+
+                            System.out.println("UPDATE LEAFSET MESSAGE SENT TO : "+identifierRight);
 
                         }catch (IOException e){
                             log.error("Exception occured when trying to send messaget to destingation");
@@ -181,7 +191,7 @@ public class NodeClient implements  Runnable{
                                 e.printStackTrace();
                             }
 
-                            String messToSend = "FILEDATA "+nodeMain.fileStoredDetails.get(hashIdentifier)+" "+hashIdentifier+" "+fileSize;
+                            String messToSend = "FILEDATA "+nodeMain.fileStoredDetails.get(hashIdentifier)+" "+hashIdentifier+" "+selfIdentifier+" "+selfIP;
 
 
                             if(closestValue.equals(leftNodeIdentifier)){
@@ -197,6 +207,9 @@ public class NodeClient implements  Runnable{
                                     dataOutputStream.writeInt(fileSize);
                                     dataOutputStream.write(fileByte,0,fileSize);
                                     dataOutputStream.flush();
+
+                                    System.out.println("FILE "+ hashIdentifier+" MIGRATED TO "+identifierLeft);
+
 
                                 } catch (IOException e) {
                                     log.error("Exception occured when trying to send removal message.");
@@ -218,6 +231,8 @@ public class NodeClient implements  Runnable{
                                     dataOutputStream.write(fileByte,0,fileSize);
                                     dataOutputStream.flush();
 
+                                    System.out.println("FILE "+ hashIdentifier+" MIGRATED TO "+identifierRight);
+
                                 }catch (IOException e){
                                     log.error("Exception occured when trying to send messaget to destingation");
                                     e.printStackTrace();
@@ -230,6 +245,7 @@ public class NodeClient implements  Runnable{
                             File fileToBeDeleted = new File("/tmp/hsperfdata_leovig/"+fileName);
                             
                             fileToBeDeleted.delete();
+                            System.out.println("FILE DELETED FROM LOCAL REPO");
                             
                         }
 

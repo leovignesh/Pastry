@@ -46,7 +46,7 @@ public class JoinOverlay implements  Runnable{
             log.error("Exception occured when trying to get peer socket.");
         }
 
-        String messToSend = "JOIN 0 "+selfNodeDetails.getIpAddress()+" "+selfNodeDetails.getPort()+" "+selfNodeDetails.getNickName()+" "+selfNodeDetails.getIdentifier()+" START=>";
+        String messToSend = "JOIN 0 "+selfNodeDetails.getIpAddress()+" "+selfNodeDetails.getPort()+" "+selfNodeDetails.getNickName()+" "+selfNodeDetails.getIdentifier()+" START";
         try {
             sendDataToDestination(peerSocket,messToSend);
             sendObjectToDestination(peerSocket,NodeMain.routingTable);
