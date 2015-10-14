@@ -45,7 +45,7 @@ public class StoreDataStart {
 
         while (true){
             try {
-                System.out.println("Store DataServer Started....");
+                //System.out.println("Store DataServer Started....");
                 socket = serverSocket.accept();
             }catch (IOException e){
                 System.out.println("Exception occured when trying to start datastore");

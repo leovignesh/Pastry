@@ -28,7 +28,7 @@ public class NodeServer implements  Runnable{
     public void run() {
 
         log.info("Server Connected.....");
-        log.debug("Thread Name : " + Thread.currentThread().getName());
+        //log.debug("Thread Name : " + Thread.currentThread().getName());
 
         String mssRcvd=null;
         try {
@@ -36,7 +36,7 @@ public class NodeServer implements  Runnable{
         }catch (IOException e){
 
         }
-        log.debug("Request received :  " + mssRcvd);
+        //log.debug("Request received :  " + mssRcvd);
         String[] tokens = mssRcvd.split(" ");
 
         String requestType = tokens[0].trim();
@@ -84,7 +84,7 @@ public class NodeServer implements  Runnable{
 
 
                 // update routing table 
-                System.out.println("number of prefix matching "+numberPrefixMatching);
+                //System.out.println("number of prefix matching "+numberPrefixMatching);
                 Map<Integer,ArrayList<NodeDetails>> receivedTempRoutingTable = updateRoutingTable(tempRoutingTable, numberPrefixMatching);
 
                 // Send to the originator
@@ -136,8 +136,8 @@ public class NodeServer implements  Runnable{
                     Map<Integer, ArrayList<NodeDetails>> receivedTempRoutingTable = updateRoutingTable(tempRoutingTable, numberPrefixMatching);
 
                     if (nodeDetailsToSend.getIdentifier().equals(selfNodeDetails.getIdentifier())) {
-                        log.info("I am the guy responsible for the JOIN .YOU Find out where to place. Left or right.");
-                        log.info("Send JOIN OK");
+                        //log.info("I am the guy responsible for the JOIN .YOU Find out where to place. Left or right.");
+                        //log.info("Send JOIN OK");
                         messToSend = "FINALOK LEAF";
 
                         try {
@@ -187,7 +187,7 @@ public class NodeServer implements  Runnable{
                             		
 	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(nodeDetailsToSend.getIdentifier())){
 	                            			
-	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			//log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
 	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
 	                            			
 	                            		}
@@ -430,7 +430,7 @@ public class NodeServer implements  Runnable{
 
                     if(closestValue.equals(nodeIdentifier)){
 
-                        log.info("Send the file to the New node.");
+                        //log.info("Send the file to the New node.");
                         try {
                             Socket nodeSocket = getNodeSocket(nodeDetails.getIpAddress(), nodeDetails.getPort());
                             sendDataToDestination(nodeSocket, messToSend);
@@ -447,13 +447,13 @@ public class NodeServer implements  Runnable{
                             e.printStackTrace();
                         }
 
-                        log.info(" File datastrucutre  before "+nodeMain.fileStoredDetails.size());
+                        //log.info(" File datastrucutre  before "+nodeMain.fileStoredDetails.size());
                         nodeMain.fileStoredDetails.remove(hashIdentifier);
                         
                         File fileToBeDeleted = new File("/tmp/hsperfdata_leovig"+fileName);
                         
                         fileToBeDeleted.delete();
-                        log.info(" File datastrucutre after "+nodeMain.fileStoredDetails.size());
+                        //log.info(" File datastrucutre after "+nodeMain.fileStoredDetails.size());
 
                     }else {
                         log.info("Keep the file locally. I am the closer.");
@@ -511,7 +511,7 @@ public class NodeServer implements  Runnable{
 
                 ArrayList<NodeDetails> routingTable = (ArrayList<NodeDetails>)receiveObjectFromDestination(socket);
 
-                log.info("Routing table update received from "+rcvdIdentifier);
+                log.info("ROUTING TABLE UPDATE RECEIVED FROM :  "+rcvdIdentifier);
                 updateFinalRoutingTable(routingTable,rowNumber);
 
             } catch (IOException e) {
@@ -532,9 +532,9 @@ public class NodeServer implements  Runnable{
             String pathTravelled = tokens[6].trim();
             int hopCount = Integer.parseInt(tokens[7].trim());
 
-            log.info("Message received from "+storeIPToSend+" Port "+storePortToSend);
+            //log.info("Message received from "+storeIPToSend+" Port "+storePortToSend);
 
-            log.info("Message received to send the closest node for saving the file. Path Travelled "+pathTravelled);
+            //log.info("Message received to send the closest node for saving the file. Path Travelled "+pathTravelled);
             System.out.println("self node details "+selfNodeDetails.getIdentifier());
             
             boolean destinationFound=false;
@@ -547,10 +547,10 @@ public class NodeServer implements  Runnable{
 	            if(typeOfOperation.equals("FILESAVE")){
 	
 	                if(fileNodeDetails.getIdentifier().equals(selfNodeDetails.getIdentifier())){
-	                    log.info("I am the guy responsible for the file. Send a message to the destination to send the file.");
+	                    //log.info("I am the guy responsible for the file. Send a message to the destination to send the file.");
 	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier()+"=>FINAL";
 	
-	                    log.info("Path Travelled so far : "+pathTravelled);
+	                    log.info("PATH TRAVELLED : "+pathTravelled);
 	
 	                    messToSend = "CLOSESTSERVER "+typeOfOperation+" "+fileNodeDetails.getIpAddress()+":"+fileNodeDetails.getPort()
 	                            +" "+fileNodeDetails.getIdentifier()+" "+pathTravelled;
@@ -564,10 +564,10 @@ public class NodeServer implements  Runnable{
 	                    }
 	
 	                }else{
-	                    log.info("Forward the message to the closest node. ");
-	                    System.out.println("self node details --"+selfNodeDetails.getIdentifier());
+	                    //log.info("Forward the message to the closest node. ");
+	                    //System.out.println("self node details --"+selfNodeDetails.getIdentifier());
 	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier();
-	                    System.out.println("Path travelled : "+pathTravelled);
+	                    System.out.println("PATH TRAVELLED : "+pathTravelled);
 	
 	                    messToSend = "GETNODE "+typeOfOperation+" "+identifierFile+" "+filename+" "+storeIPToSend+" "+storePortToSend+" "+pathTravelled+" "+ ++hopCount;
 	                    try {
@@ -576,8 +576,8 @@ public class NodeServer implements  Runnable{
 	                    } catch (IOException e) {	
 	                        
 	                    	
-	                    	log.error("Exception occurred when trying to send FILESAVE to Node.");
-	                    	log.error("Node might be deleted. So remove it from the routing table and send the request again.");
+	                    	//log.error("Exception occurred when trying to send FILESAVE to Node.");
+	                    	log.error("Node NOT REACHABLE. So remove it from the routing table and send the request again.");
                             
                             // Delete the entry from the routing table.
                             
@@ -588,7 +588,7 @@ public class NodeServer implements  Runnable{
                             		if(nodeMain.routingTable.get(i).get(j).getIdentifier()!=null){
 	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(fileNodeDetails.getIdentifier())){
 	                            			
-	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			//log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
 	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
 	                            			
 	                            		}
@@ -616,10 +616,10 @@ public class NodeServer implements  Runnable{
 	
 	            	boolean filenotFound = false;
 	            	if(fileNodeDetails.getIdentifier().equals(selfNodeDetails.getIdentifier())){
-	                    log.info("I am the guy responsible for sending the file.");
+	                    //log.info("I am the guy responsible for sending the file.");
 	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier()+"=>FINAL";
 	
-	                    log.info("Path Travelled so far : "+pathTravelled);
+	                    log.debug("PATH TRAVELLED : "+pathTravelled);
 	
 	                    
 	                    File file= null;
@@ -683,10 +683,10 @@ public class NodeServer implements  Runnable{
 	                    
 	
 	                }else{
-	                    log.info("Forward the Retreival message to the closest node. ");
-	                    System.out.println("self node details --"+selfNodeDetails.getIdentifier());
+	                    //log.info("Forward the Retreival message to the closest node. ");
+	                    //System.out.println("self node details --"+selfNodeDetails.getIdentifier());
 	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier();
-	                    System.out.println("Path travelled : "+pathTravelled);
+	                    //System.out.println("Path travelled : "+pathTravelled);
 	
 	                    messToSend = "GETNODE "+typeOfOperation+" "+identifierFile+" "+filename+" "+storeIPToSend+" "+storePortToSend+" "+pathTravelled+" "+ ++hopCount;
 	                    try {
@@ -698,8 +698,8 @@ public class NodeServer implements  Runnable{
 	                    } catch (IOException e) {
 	                        
 	                    		                    	
-	                    	log.error("Exception occurred when trying to send FILESAVE to Node.");
-	                    	log.error("Node might be deleted. So remove it from the routing table and send the request again.");
+	                    	/*log.error("Exception occurred when trying to send FILESAVE to Node.");
+	                    	log.error("Node might be deleted. So remove it from the routing table and send the request again.");*/
                             
                             // Delete the entry from the routing table.
                             
@@ -710,7 +710,7 @@ public class NodeServer implements  Runnable{
                             		if(nodeMain.routingTable.get(i).get(j).getIdentifier()!=null){
 	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(fileNodeDetails.getIdentifier())){
 	                            			
-	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			log.info("ROUTING TABLE ENTRY PRESET .DELETE IT "+nodeMain.routingTable.get(i).get(j).getIdentifier());
 	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
 	                            			
 	                            		}
@@ -751,7 +751,7 @@ public class NodeServer implements  Runnable{
                 System.out.println(messageLength);
                 byte[] data = new byte[messageLength];
                 dataInputStream.readFully(data, 0, messageLength);
-                System.out.println("File name received "+fileName);
+                //System.out.println("File name received "+fileName);
                 //String newFileNameRcvd = "/tmp/hsperfdata_leovig"+fileName;
                 File newFileName = new File("/tmp/hsperfdata_leovig"+fileName);
 
@@ -831,15 +831,15 @@ public class NodeServer implements  Runnable{
                         String messToSend = "ROUTINGTABLECONV "+nodeDetailsTemp.getIdentifier()+" "+i;
                         try {
 
-                            System.out.println("preparing to send "+nodeDetailsTemp.getIdentifier());
+                            //System.out.println("preparing to send "+nodeDetailsTemp.getIdentifier());
                             nodeSocket = getNodeSocket(ipAddressTemp,portTemp);
                             sendDataToDestination(nodeSocket,messToSend);
                             sendObjectToDestination(nodeSocket,nodeMain.routingTable.get(i));
-                            System.out.println("Routing table information sent to "+nodeDetailsTemp.getIdentifier());
+                            //System.out.println("Routing table information sent to "+nodeDetailsTemp.getIdentifier());
 
                             alreadySent.add(nodeDetailsTemp.getIdentifier());
                         } catch (IOException e) {
-                            log.info("Node is down. So cannot send the routing table to him.  Will remove form the routing table.");
+                            log.info("NODE DOWN. UPDATE ROUTING TABLE");
                             
                             // Remove it from my routing table.
                             removeAddress.add(nodeDetailsTemp.getIdentifier());
@@ -868,9 +868,9 @@ public class NodeServer implements  Runnable{
 		        		
 		        		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(tempValue)){
 		        			
-		        			log.info("Remove routing table entry for sendin the routing table updates. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+		        			//log.info("Remove routing table entry for sendin the routing table updates. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
 		        			nodeMain.routingTable.get(i).set(j, null);
-		        			log.info("Entry after deleing : "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+		        			//log.info("Entry after deleing : "+nodeMain.routingTable.get(i).get(j).getIdentifier());
 		        			
 		        		}
 		        		
@@ -888,9 +888,9 @@ public class NodeServer implements  Runnable{
 
     private Map<Integer,ArrayList<NodeDetails>>  updateRoutingTable(Map<Integer,ArrayList<NodeDetails>> routingTableTemp,int rowsMatching){
 
-        System.out.println("Updating routing table.");
+        //System.out.println("Updating routing table.");
 
-        System.out.println("Row number of current routing table : "+rowsMatching);
+        //System.out.println("Row number of current routing table : "+rowsMatching);
 
         for(int j=0;j<=rowsMatching;j++){
 
@@ -905,7 +905,7 @@ public class NodeServer implements  Runnable{
                     }
 
                 }else{
-                    System.out.println("Value is present...");
+                    //System.out.println("Value is present...");
                 }
             }
         }
@@ -924,7 +924,7 @@ public class NodeServer implements  Runnable{
         int templeftLeaf = Integer.parseInt(left, 16);
         int tempRecvdNodeIdenfifier = Integer.parseInt(newIdentifierRec,16);
 
-        log.info("Right "+nodeMain.leafRight.getIdentifier()+" left "+nodeMain.leafLeft.getIdentifier()+" rcvd "+newIdentifierRec);
+        log.info("Right "+nodeMain.leafRight.getIdentifier()+" left "+nodeMain.leafLeft.getIdentifier()+" New ID "+newIdentifierRec);
         //log.info("right "+temprightLeaf+" left "+templeftLeaf+" chk "+tempRecvdNodeIdenfifier );
 
         boolean betweenleafs = true;
@@ -935,24 +935,24 @@ public class NodeServer implements  Runnable{
         }
 
 
-        System.out.println("is it between : "+betweenleafs);
+        log.debug("Value falls betwene leafsets ? : "+betweenleafs);
 
         if(!betweenleafs){
             // chk the routing table for closest match.
-            log.info("The value doesnt fall between two values.");
+            log.debug("Values fall between leafsets");
             int numberPrefixMatching = numberOfPreFixMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
             char firstNonMatchingPrefix = firstPreFixNotMatching(selfNodeDetails.getIdentifier(),newIdentifierRec);
             int firstNonMatchingPrefixInt = Integer.parseInt(firstNonMatchingPrefix+"",16);
 
-            log.info("Numer of prefix matching "+numberPrefixMatching+" firstnonmatching prefix "+firstNonMatchingPrefixInt);
+            //log.info("Numer of prefix matching "+numberPrefixMatching+" firstnonmatching prefix "+firstNonMatchingPrefixInt);
 
             int index = firstNonMatchingPrefixInt;
             String messToSend =null;
             // Find the numerically closest guy from routing table and send it to that guy.
             if(nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt).getIdentifier()!=null){
-                log.info("NOTBETWEENLEWFS : There is an entry in the non matching cell. Forward to that guy.");
+                log.debug("NOTBETWEENLEWFS : There is an entry in the non matching cell. Forward to that guy.");
                 nodedetailsTemp = nodeMain.routingTable.get(numberPrefixMatching).get(firstNonMatchingPrefixInt);
-                log.info("NOTBETWEENLEWFS : Messge to be sent to  "+nodedetailsTemp.getIdentifier());
+                //log.info("NOTBETWEENLEWFS : Messge to be sent to  "+nodedetailsTemp.getIdentifier());
             }else{
 
                 log.info("No entry in the non matching cell. So check for closest.");
@@ -961,7 +961,7 @@ public class NodeServer implements  Runnable{
 
                 if(nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier().equals(selfNodeDetails.getIdentifier())){
 
-                    log.info("Check if I am the closer or the leaf sets are closer.");
+                    //log.info("Check if I am the closer or the leaf sets are closer.");
                     // Check the leaf set to see who is closer. 
 
                     String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
@@ -970,20 +970,20 @@ public class NodeServer implements  Runnable{
                     
                     
                     if(closestMatch.equals(selfNodeDetails.getIdentifier())){
-                        log.info("I am the closest match. I need to place it.");
+                        log.info("I am closet. Place it near me");
                         nodedetailsTemp = selfNodeDetails;
                     }else if(closestMatch.equals(left)){
-                        log.info("Left is closer. send it");
+                        log.info("LEFT CLOSER");
                         nodedetailsTemp = nodeMain.leafLeft;
                     }else if(closestMatch.equals(right)){
-                        log.info("Right is closer send it");
+                        log.info("RIGHT CLOSER");
                         nodedetailsTemp = nodeMain.leafRight;
                     }
 
 
                 }else{
-                    log.info("Numerically closes guy : " + nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier());
-                    log.info("Have to send the packet to him. ");
+                    log.info("Numerically closer : " + nodeMain.routingTable.get(numberPrefixMatching).get(index).getIdentifier());
+                    //log.info("Have to send the packet to him. ");
 
                     nodedetailsTemp = nodeMain.routingTable.get(numberPrefixMatching).get(index);
 
@@ -992,26 +992,26 @@ public class NodeServer implements  Runnable{
 
 
         }else {
-            log.info("The value falls between the two leafsets. Place it at the proper place with wrapping.");
+            log.info("Value falls between leafsets");
 
             String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
             String closestMatch = closestMatch(newIdentifierRec,closestMatchLeafSet,selfNodeDetails.getIdentifier());
             
-            System.out.println("value of closest Math "+closestMatch);
+            //System.out.println("value of closest Math "+closestMatch);
             
             if(closestMatch.equals(selfNodeDetails.getIdentifier())){
-                log.info("I am the closest match. I need to place it.");
+                log.info("I AM CLOSER");
                 nodedetailsTemp = selfNodeDetails;
             }else if(closestMatch.equals(left)){
-                log.info("Left is closer. send it");
+                log.info("LEFT CLOSER");
                 nodedetailsTemp = nodeMain.leafLeft;
             }else if(closestMatch.equals(right)){
-                log.info("Right is closer send it");
+                log.info("RIGHT CLOSER");
                 nodedetailsTemp = nodeMain.leafRight;
             }
         }
 
-        log.info("Final Closest Match for : "+newIdentifierRec+" is : "+nodedetailsTemp.getIdentifier());
+        log.debug("CLOSEST MATH FOR : "+newIdentifierRec+" is : "+nodedetailsTemp.getIdentifier());
 
         return nodedetailsTemp;
     }
@@ -1022,7 +1022,7 @@ public class NodeServer implements  Runnable{
         int rightNum = Integer.parseInt(right, 16);
         int compareValueNum = Integer.parseInt(compareValue, 16);
 
-        System.out.println(rightNum + " " + leftNum + " " + compareValueNum);
+        //System.out.println(rightNum + " " + leftNum + " " + compareValueNum);
 
         int nodeLeft = leftNum - compareValueNum;
         int reversrLeft = nodeLeft - Integer.parseInt("FFFF", 16);
@@ -1033,7 +1033,7 @@ public class NodeServer implements  Runnable{
         int reversrRight = nodeRigh - Integer.parseInt("FFFF", 16);
         int second = Math.min(Math.abs(nodeRigh), Math.abs(reversrRight));
 
-        log.info("	First " + first + " Second " + second);
+        //log.info("	First " + first + " Second " + second);
 
         if (first < second) {
         	

@@ -94,10 +94,7 @@ public class NodeMain {
             threadClient.start();
 
 
-
-            System.out.println("Node registration successful. Join the overlay if you are not the first Node.");
-
-            System.out.println("Random ip "+randomNodeIP+" port "+randomNodePort+" identifier "+randomNodeIdentifier);
+            log.debug("RANDOM IP : " + randomNodeIP + " PORT : " + randomNodePort + " IDENTIFIER : " + randomNodeIdentifier);
             
             // Join the overlay if you are not the first guy.
             if(randomNodeID!=0) {
@@ -112,7 +109,7 @@ public class NodeMain {
             while (true) {
                 try {
                     socket = serverSocket.accept();
-                    System.out.println("Node server started...");
+                    log.info("Node server started...");
 
                     NodeServer nodeServer = new NodeServer(socket,selfnodeDetails,this);
                     Thread thread1 = new Thread(nodeServer);
@@ -132,21 +129,19 @@ public class NodeMain {
 
     public static void main(String[] args) {
 
-        /*if(args.length != 3){
-            throw new IllegalArgumentException("Parameter(s): <Self Port> <Discovery Node IP> <Discovery Node Port>" );
-        }*/
+
         System.out.println("Parameter(s): <Self Port> <Discovery Node IP> <Discovery Node Port> <HEX ID optional>");
 
         discoverIP = args[1].trim();
         discoverPort = Integer.parseInt(args[2].trim());
 
-        System.out.println("Enter the identifier or press N :");
+        System.out.println("ENTER IDENTIFIER OR ENTER NO :");
         Scanner scanner = new Scanner(System.in);
         int input =0;
         
         try{
             String tempInput = scanner.nextLine();
-            if(!tempInput.equals("N")){
+            if(!tempInput.equals("NO")){
             	selfIdentifier = tempInput;
             }
             
@@ -155,11 +150,7 @@ public class NodeMain {
             System.out.println("Enter a valid Number");
         }
         
-        /*
-        
-        if(args.length==4){
-            selfIdentifier = args[3].trim();
-        }*/
+
 
         NodeMain nodeMain = new NodeMain(Integer.parseInt(args[0].trim()));
         nodeMain.startNode();
@@ -185,7 +176,7 @@ public class NodeMain {
         
         
         String messToSend = "UNREG " + selfIP + " " + selfPort + " " + selfnickName + " " + selfIdentifier;
-        log.info("Unregister message to send to discovery Node : "+messToSend);
+        log.info("UNREGISTER  : "+selfIdentifier+" "+selfIP+":"+selfPort);
 
         try {
             sendDataToDestination(discoverSocket, messToSend);
@@ -202,8 +193,6 @@ public class NodeMain {
                 e.printStackTrace();
             }
         }
-        
-        log.info("Message received From discover node : "+messRcvd);
 
         if(messRcvd.equals("UNREGSUCCESS")){
         	return true;
@@ -238,11 +227,11 @@ public class NodeMain {
                 selfIdentifier = getRandomIdentifier();
             }
 
-            log.info("Identifier is " + selfIdentifier);
+            //log.info("Identifier is " + selfIdentifier);
 
             String messToSend = "REG " + selfIP + " " + selfPort + " " + selfnickName + " " + selfIdentifier;
 
-            log.info("Message to send to discovery Node : "+messToSend);
+            log.info("REGISTRATION MESSAGE : "+selfIdentifier+" "+selfIP+":"+selfPort);
 
             try {
                 sendDataToDestination(discoverSocket, messToSend);
@@ -261,24 +250,24 @@ public class NodeMain {
                 }
             }
 
-            log.info("Message Received : " + messRcvd);
+            //log.info("Message Received : " + messRcvd);
 
             messTokens = messRcvd.split(" ");
             requestType = messTokens[0].trim();
-            System.out.println("Request type :"+requestType);
+            //System.out.println("Request type :"+requestType);
 
             if (requestType.equals("UNREGFIRST")) {
-                log.info("Already the server is connected. First unregister and then register.");
+                log.info("UNREGISTER FIRST : ALREADY REGISTERED");
                 break;
             } else if (requestType.equals("IDCLASH")) {
-                log.info("Already some other node has generated this id. Please use a different id.");
+                log.info("IDCLASH ");
                 break;
             }else if(requestType.equals("REGSUCCESS")){
 
                 regSuccess = true;
                 randomNodeID = Integer.parseInt(messTokens[1].trim());
 
-                log.info("random id received : "+randomNodeID);
+                //log.info("random id received : "+randomNodeID);
 
                 if(randomNodeID!=0){
                     randomNodeIP = messTokens[2].trim().split(":")[0];
@@ -287,8 +276,11 @@ public class NodeMain {
                     randomNodeIdentifier = messTokens[4].trim();
 
                 }
+                log.info("REGISTATION SUCCESSFUL "+selfIdentifier+" "+selfIP+":"+selfPort);
 
-                log.info("Registration successful. come out of loop.");
+                log.debug("RANDOM NODE ID "+randomNodeIdentifier+" RANDOM NODE IP "+randomNodeIP+" RANDOM NODE PORT "+randomNodePort+" RANDOM NODE NICKNAME "+randomNodeNickName);
+
+
                 break;
             }
 
@@ -303,7 +295,7 @@ public class NodeMain {
 
         long nanoTime = System.nanoTime();
         String hexValue = Long.toHexString(nanoTime);
-        log.info("Random Identifier value : "+hexValue.substring(hexValue.length()-4,hexValue.length()));
+        //log.info("Random Identifier value : "+hexValue.substring(hexValue.length()-4,hexValue.length()));
 
         return hexValue.substring(hexValue.length()-4,hexValue.length()).toUpperCase();
     }

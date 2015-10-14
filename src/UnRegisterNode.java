@@ -28,20 +28,14 @@ public class UnRegisterNode implements  Runnable{
     public void run() {
 
     	// Remove from the routing table entry and send a message to the node.
-    	System.out.println("Routing table size before : "+discovery.nodeDetails.size());
-    	System.out.println("Identifier size before : "+discovery.allIdentifier.size());
-    	
+
     	discovery.nodeDetails.remove(ipAddress);
     	discovery.allIdentifier.remove(identifier);
-    	
-    	System.out.println("Routing table size after : "+discovery.nodeDetails.size());
-    	System.out.println("Identifier size after : "+discovery.allIdentifier.size());
-    	
-    	
+
     	String messToSend = "UNREGSUCCESS";
     	sendDataToDestination(socket, messToSend);
 
-    	System.out.println("Unregistration successful.");
+    	System.out.println("UNREGSTER SUCCESSFUL "+identifier+" "+ipAddress+":"+port);
 
     }
     

@@ -61,6 +61,7 @@ public class StoreDataServer implements  Runnable{
             
 
             log.info("ClosestIP : "+closestIp+" Closest Port : "+closestPort+" Closest Identifier : "+closestIdentifier);
+            log.info("PATH TRAVELLED "+pathTravelled);
 
             if(request.equals("FILESAVE")){
 
@@ -87,13 +88,13 @@ public class StoreDataServer implements  Runnable{
 	                    System.out.println(messageLength);
 	                    byte[] data1 = new byte[messageLength];
 	                    dataInputStream.readFully(data1, 0, messageLength);
-	                    System.out.println("File name received "+fileName);
+	                    //System.out.println("File name received "+fileName);
 	                    File newFileName = new File("/s/chopin/b/grad/leovig/Documents/CS555/HW2/receivedFiles"+fileName.substring(fileName.lastIndexOf("/")));
 	
 	                    FileOutputStream fileOutputStream = new FileOutputStream(newFileName);
 	                    fileOutputStream.write(data1);
 	                    fileOutputStream.close();
-	                    System.out.println("File "+ newFileName +" saved in the location.");
+	                    log.debug("File "+ newFileName +" SAVED TO LOCATION.");
 	
 	                }catch(IOException e){
 	                    System.out.println("Exception occured when trying to get the file.");

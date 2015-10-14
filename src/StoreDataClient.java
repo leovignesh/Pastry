@@ -79,7 +79,7 @@ public class StoreDataClient implements Runnable{
                 String[] fileNameSplit = fileDetails.split(" ");
                 StoreDataStart.fileName = fileNameSplit[0].trim();
 
-                System.out.println("fileNameDetails "+fileDetails);
+                //System.out.println("fileNameDetails "+fileDetails);
                 
                 if(fileNameSplit.length>1){
                     StoreDataStart.hashFileName = fileNameSplit[1].trim();
@@ -87,7 +87,7 @@ public class StoreDataClient implements Runnable{
                 	StoreDataStart.hashFileName = computeHex(StoreDataStart.fileName);
                 }
 
-                System.out.println("hashfilename .."+StoreDataStart.hashFileName);
+                //System.out.println("hashfilename .."+StoreDataStart.hashFileName);
                 getClosestServer("FILESAVE");
 
                 break;

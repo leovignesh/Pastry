@@ -56,7 +56,7 @@ public class NodeClient implements  Runnable{
             switch (input) {
                 case 1:
                     System.out.println("******************\n");
-                    System.out.println("Routing table Entries :\n");
+                    System.out.println("ROUTING TABLE ENTRIES :\n");
 
                     Set<Integer> routingTableKey = nodeMain.routingTable.keySet();
                     Iterator itr = routingTableKey.iterator();
@@ -78,16 +78,17 @@ public class NodeClient implements  Runnable{
                     break;
                 case 2:
                     System.out.println("************");
-                    System.out.println("Display the Leaf Set");
+                    System.out.println("LEAF SET ");
 
-                    System.out.println("Left Leaf IPAddress : " + nodeMain.leafLeft.getIpAddress() + " : " + nodeMain.leafLeft.getPort() + "  " + nodeMain.leafLeft.getIdentifier() + "  " + nodeMain.leafLeft.getNickName());
-                    System.out.println("Right Leaf IPAddress : " + nodeMain.leafRight.getIpAddress() + " : " + nodeMain.leafRight.getPort() + "  " + nodeMain.leafRight.getIdentifier() + "  " + nodeMain.leafRight.getNickName());
+                    System.out.println("LEFT  : " + nodeMain.leafLeft.getIpAddress() + " : " + nodeMain.leafLeft.getPort() + "  " + nodeMain.leafLeft.getIdentifier() + "  " + nodeMain.leafLeft.getNickName());
+                    System.out.println("RIGHT : " + nodeMain.leafRight.getIpAddress() + " : " + nodeMain.leafRight.getPort() + "  " + nodeMain.leafRight.getIdentifier() + "  " + nodeMain.leafRight.getNickName());
+                    System.out.println("\n");
                     break;
 
 
                 case 3:
                     System.out.println("***************");
-                    System.out.println("List the files in the Node.");
+                    System.out.println("FILES IN NODE ");
 
                     Set<String> keys = nodeMain.fileStoredDetails.keySet();
                     Iterator<String> itr1 = keys.iterator();
@@ -97,12 +98,13 @@ public class NodeClient implements  Runnable{
                         System.out.println(i+", "+keyvalue+" : "+nodeMain.fileStoredDetails.get(keyvalue));
 
                     }
+                    System.out.println("\n");
 
                     break;
 
                 case 4:
                 	System.out.println("************");
-                	System.out.println("Leave the distributed System");
+                	System.out.println("LEAVE DISTRIBUTED SYSTEM");
                 	boolean unRegStatus = nodeMain.unRegisterNode();
 
                     String ipAddressLeft = nodeMain.leafLeft.getIpAddress();
@@ -112,7 +114,7 @@ public class NodeClient implements  Runnable{
                     int portRight = nodeMain.leafRight.getPort();
                 
                 	if(unRegStatus){
-                		log.info("UnRegistration Successful. Inform the leaf nodes about leaving the network");
+                		log.debug("UNREGISTRATION SUCCESSFUL ");
 
                 		try {
                 			String messToSend = "REMNODELEAFUPDATE 1";
@@ -143,7 +145,7 @@ public class NodeClient implements  Runnable{
 
 
                     if(fileKeys.size()==0){
-                        System.out.println("No files stored in the system.");
+                        System.out.println("NO FILES STORED IN THE SYSTEM");
                     }else{
 
                         Iterator<String> itr2 = fileKeys.iterator();
@@ -160,7 +162,7 @@ public class NodeClient implements  Runnable{
                             File file = new File(fileName);
                             FileInputStream fileInputStream = null;
                             
-                            System.out.println("File name in the stored database :  "+fileName);
+                            //System.out.println("File name in the stored database :  "+fileName);
                             
                             try {
                                 fileInputStream = new FileInputStream(file);
@@ -184,7 +186,7 @@ public class NodeClient implements  Runnable{
 
                             if(closestValue.equals(leftNodeIdentifier)){
 
-                                log.info("Send the file to the left Node.");
+                                log.debug("Send the file to the left Node.");
                                 try {
                                     Socket nodeSocket = getNodeSocket(ipAddressLeft, portLeft);
                                     sendDataToDestination(nodeSocket, messToSend);
@@ -203,7 +205,7 @@ public class NodeClient implements  Runnable{
 
                             }else if(closestValue.equals(rightNodeIdentifier)){
 
-                                log.info("Send the file to the right node.");
+                                log.debug("Send the file to the right node.");
 
                                 try{
                                     Socket nodeSocket1 = getNodeSocket(ipAddressRight, portRight);

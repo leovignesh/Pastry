@@ -34,7 +34,7 @@ public class DiscoveryRegisterNode implements  Runnable{
         String messToSend =null;
 
         if(discovery.nodeDetails.size()==0){
-            System.out.println("First Node in the system.Cannot return any ipaddress");
+            System.out.println("FIRST NODE "+identifier+" "+ipAddress+":"+port);
             messToSend="REGSUCCESS 0";
             discovery.nodeDetails.put(ipAddress, discoveryNodeDetails);
             discovery.allIdentifier.add(identifier);
@@ -42,14 +42,14 @@ public class DiscoveryRegisterNode implements  Runnable{
         }else{
 
             if(discovery.nodeDetails.get(ipAddress) !=null){
-                System.out.println("Already registerd. Unregister first and then register.");
+                System.out.println("ALREADY REGISTERED "+identifier);
                 messToSend = "UNREGFIRST ";
             }else {
 
                 // Check if the identifier is present for other Ip address.
                 if (discovery.allIdentifier.contains(identifier)) {
 
-                    System.out.println("ID already present.");
+                    System.out.println("IDCLASH "+identifier+" "+ipAddress+":"+port);
                     messToSend = "IDCLASH ";
                 } else {
 
@@ -61,7 +61,7 @@ public class DiscoveryRegisterNode implements  Runnable{
         }
 
 
-         //Testing remove it.
+        /* //Testing remove it.
         if(identifier.equals("0239")){
 
             messToSend = "REGSUCCESS 1 " + "129.82.46.208:4567 frankfort 0200";
@@ -70,7 +70,7 @@ public class DiscoveryRegisterNode implements  Runnable{
             messToSend = "REGSUCCESS 1 " + "129.82.46.190:4567 augusta 2000";
         }else if(identifier.equals("3999")){
             messToSend = "REGSUCCESS 1 " + "129.82.46.199:4567 augusta 6000";
-        }
+        }*/
         // send to the Node that requested.
         sendDataToDestination(socket,messToSend);
 
