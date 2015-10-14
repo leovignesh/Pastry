@@ -97,6 +97,8 @@ public class NodeMain {
 
             System.out.println("Node registration successful. Join the overlay if you are not the first Node.");
 
+            System.out.println("Random ip "+randomNodeIP+" port "+randomNodePort+" identifier "+randomNodeIdentifier);
+            
             // Join the overlay if you are not the first guy.
             if(randomNodeID!=0) {
                 JoinOverlay joinOverlay = new JoinOverlay(selfnodeDetails, randomNodeIP, randomNodePort, randomNodeNickName,randomNodeIdentifier);
@@ -128,25 +130,6 @@ public class NodeMain {
     }
 
 
-    public void buildLeafSet(){
-        if(randomNodeID==0){
-            log.info("First node so no leafset");
-        }else{
-            log.info("Build the leaf set ");
-
-            if(leafLeft!=null && leafRight!=null){
-
-            }else {
-                log.info("");
-
-            }
-
-
-
-        }
-    }
-
-
     public static void main(String[] args) {
 
         /*if(args.length != 3){
@@ -157,14 +140,33 @@ public class NodeMain {
         discoverIP = args[1].trim();
         discoverPort = Integer.parseInt(args[2].trim());
 
+        System.out.println("Enter the identifier or press N :");
+        Scanner scanner = new Scanner(System.in);
+        int input =0;
+        
+        try{
+            String tempInput = scanner.nextLine();
+            if(!tempInput.equals("N")){
+            	selfIdentifier = tempInput;
+            }
+            
+            
+        }catch (Exception e){
+            System.out.println("Enter a valid Number");
+        }
+        
+        /*
+        
         if(args.length==4){
             selfIdentifier = args[3].trim();
-        }
+        }*/
 
         NodeMain nodeMain = new NodeMain(Integer.parseInt(args[0].trim()));
         nodeMain.startNode();
 
     }
+    
+    
     
     public boolean unRegisterNode(){
     	
@@ -233,7 +235,7 @@ public class NodeMain {
 
 
             if(selfIdentifier==null){
-                selfIdentifier = getNodeIdentifier();
+                selfIdentifier = getRandomIdentifier();
             }
 
             log.info("Identifier is " + selfIdentifier);
@@ -296,6 +298,15 @@ public class NodeMain {
         return regSuccess;
 
     }
+    
+    public String getRandomIdentifier(){
+
+        long nanoTime = System.nanoTime();
+        String hexValue = Long.toHexString(nanoTime);
+        log.info("Random Identifier value : "+hexValue.substring(hexValue.length()-4,hexValue.length()));
+
+        return hexValue.substring(hexValue.length()-4,hexValue.length()).toUpperCase();
+    }
 
 
     private Socket getSocket(String ipAddress, int port) throws IOException {
@@ -341,13 +352,7 @@ public class NodeMain {
         return buf;
     }
 
-    public String getNodeIdentifier(){
-
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Date date = new Date();
-        return convertBytesToHex(dateFormat.format(date).getBytes());
-
-    }
+    
 
 
     private void sendDataToDestination(Socket socket,String messageToSend) throws IOException{

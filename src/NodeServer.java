@@ -176,8 +176,28 @@ public class NodeServer implements  Runnable{
 
                             //nodeMain.routingTable.get()
                             log.error("Exception occurred when trying to send JOIN to Node. Node might be deleted. So remove it from the routing table and send the request again.");
-
-
+                            
+                            // Delete the entry from the routing table.
+                            
+                            for(int i=0;i<4;i++){
+                            	
+                            	for(int j=0;j<16;j++){
+                            		
+                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier()!=null){
+                            		
+	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(nodeDetailsToSend.getIdentifier())){
+	                            			
+	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
+	                            			
+	                            		}
+                            		}
+                            		
+                            	}
+                            	
+                            }
+                            continue;
+                            
                         }
 
 
@@ -379,13 +399,15 @@ public class NodeServer implements  Runnable{
                 while (itr2.hasNext()){
                     String hashIdentifier = itr2.next();
 
+                    String fileName = nodeMain.fileStoredDetails.get(hashIdentifier);
                     String nodeIdentifier = nodeDetails.getIdentifier();
                     String selfIdentifier = selfNodeDetails.getIdentifier();
 
                     String closestValue = closestMatch(hashIdentifier,nodeIdentifier,selfIdentifier);
 
                     // prepare to send the data.
-                    File file = new File(StoreDataStart.fileName);
+                    File file = new File(fileName);
+                    
                     FileInputStream fileInputStream = null;
                     try {
                         fileInputStream = new FileInputStream(file);
@@ -427,6 +449,10 @@ public class NodeServer implements  Runnable{
 
                         log.info(" File datastrucutre  before "+nodeMain.fileStoredDetails.size());
                         nodeMain.fileStoredDetails.remove(hashIdentifier);
+                        
+                        File fileToBeDeleted = new File("/tmp/hsperfdata_leovig"+fileName);
+                        
+                        fileToBeDeleted.delete();
                         log.info(" File datastrucutre after "+nodeMain.fileStoredDetails.size());
 
                     }else {
@@ -437,9 +463,6 @@ public class NodeServer implements  Runnable{
                 }
 
             }
-
-
-
 
 
         }else if(requestType.equals("REMNODELEAFUPDATE")){
@@ -503,72 +526,212 @@ public class NodeServer implements  Runnable{
 
             String typeOfOperation = tokens[1].trim();
             String identifierFile = tokens[2].trim();
-            String storeIPToSend = tokens[3].trim();
-            int storePortToSend = Integer.parseInt(tokens[4].trim());
-            String pathTravelled = tokens[5].trim();
-
-            //System.out.println("GETNODE received............");
-
-            // Check the closest node and append the path travelled.
-            NodeDetails fileNodeDetails = lookup(identifierFile);
-            String messToSend = "";
+            String filename = tokens[3].trim();
+            String storeIPToSend = tokens[4].trim();
+            int storePortToSend = Integer.parseInt(tokens[5].trim());
+            String pathTravelled = tokens[6].trim();
+            int hopCount = Integer.parseInt(tokens[7].trim());
 
             log.info("Message received from "+storeIPToSend+" Port "+storePortToSend);
 
             log.info("Message received to send the closest node for saving the file. Path Travelled "+pathTravelled);
             System.out.println("self node details "+selfNodeDetails.getIdentifier());
+            
+            boolean destinationFound=false;
+            
+            while(!destinationFound){
+            
+	            NodeDetails fileNodeDetails = lookup(identifierFile);
+	            String messToSend = "";
+	
+	            if(typeOfOperation.equals("FILESAVE")){
+	
+	                if(fileNodeDetails.getIdentifier().equals(selfNodeDetails.getIdentifier())){
+	                    log.info("I am the guy responsible for the file. Send a message to the destination to send the file.");
+	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier()+"=>FINAL";
+	
+	                    log.info("Path Travelled so far : "+pathTravelled);
+	
+	                    messToSend = "CLOSESTSERVER "+typeOfOperation+" "+fileNodeDetails.getIpAddress()+":"+fileNodeDetails.getPort()
+	                            +" "+fileNodeDetails.getIdentifier()+" "+pathTravelled;
+	
+	                    try {
+	                        nodeSocket = getNodeSocket(storeIPToSend, storePortToSend);
+	                        destinationFound = true;
+	                    } catch (IOException e) {
+	                        System.out.println("Exception occued when trying to get datastore socket");
+	                        e.printStackTrace();
+	                    }
+	
+	                }else{
+	                    log.info("Forward the message to the closest node. ");
+	                    System.out.println("self node details --"+selfNodeDetails.getIdentifier());
+	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier();
+	                    System.out.println("Path travelled : "+pathTravelled);
+	
+	                    messToSend = "GETNODE "+typeOfOperation+" "+identifierFile+" "+filename+" "+storeIPToSend+" "+storePortToSend+" "+pathTravelled+" "+ ++hopCount;
+	                    try {
+	                        nodeSocket = getNodeSocket(fileNodeDetails.getIpAddress(), fileNodeDetails.getPort());
+	                        destinationFound = true;
+	                    } catch (IOException e) {	
+	                        
+	                    	
+	                    	log.error("Exception occurred when trying to send FILESAVE to Node.");
+	                    	log.error("Node might be deleted. So remove it from the routing table and send the request again.");
+                            
+                            // Delete the entry from the routing table.
+                            
+                            for(int i=0;i<4;i++){
+                            	
+                            	for(int j=0;j<16;j++){
+                            		
+                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier()!=null){
+	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(fileNodeDetails.getIdentifier())){
+	                            			
+	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
+	                            			
+	                            		}
+                            		}
+                            		
+                            	}
+                            	
+                            }
+	                    	
+	                    	continue;
+	                    }
+	
+	                }
+	                try {
 
-            if(typeOfOperation.equals("FILESAVE")){
+		                sendDataToDestination(nodeSocket,messToSend);
 
-                if(fileNodeDetails.getIdentifier().equals(selfNodeDetails.getIdentifier())){
-                    log.info("I am the guy responsible for the file. Send a message to the destination to send the file.");
-                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier()+"=>FINAL";
-
-                    log.info("Path Travelled so far : "+pathTravelled);
-
-                    messToSend = "CLOSESTSERVER "+typeOfOperation+" "+fileNodeDetails.getIpAddress()+":"+fileNodeDetails.getPort()
-                            +" "+fileNodeDetails.getIdentifier()+" "+pathTravelled;
-
-                    try {
-                        nodeSocket = getNodeSocket(storeIPToSend, storePortToSend);
-                    } catch (IOException e) {
-                        System.out.println("Exception occued when trying to get datastore socket");
-                        e.printStackTrace();
-                    }
-
-                }else{
-                    log.info("Forward the message to the closest node. ");
-                    System.out.println("self node details --"+selfNodeDetails.getIdentifier());
-                    pathTravelled = pathTravelled+" => "+selfNodeDetails.getIdentifier();
-                    System.out.println("Path travelled ==="+pathTravelled);
-
-                    messToSend = "GETNODE "+typeOfOperation+" "+identifierFile+" "+storeIPToSend+" "+storePortToSend+" "+pathTravelled;
-                    try {
-                        nodeSocket = getNodeSocket(fileNodeDetails.getIpAddress(), fileNodeDetails.getPort());
-                    } catch (IOException e) {
-                        System.out.println("Exception occued when trying to get closest node socket");
-                        e.printStackTrace();
-                    }
-
-                }
-            }else if(typeOfOperation.equals("FILERET")){
-
-                // TO DO Retreive operation.
-
-
-
-
-
+		            } catch (IOException e) {
+		                System.out.println("Exception occured when trying to send the message to Node.");
+		                e.printStackTrace();
+		            }
+	                
+	                
+	            }else if(typeOfOperation.equals("FILERET")){
+	
+	            	boolean filenotFound = false;
+	            	if(fileNodeDetails.getIdentifier().equals(selfNodeDetails.getIdentifier())){
+	                    log.info("I am the guy responsible for sending the file.");
+	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier()+"=>FINAL";
+	
+	                    log.info("Path Travelled so far : "+pathTravelled);
+	
+	                    
+	                    File file= null;
+	                    FileInputStream fileInputStream =null;
+	                    try{
+	                        
+		                	file = new File("/tmp/hsperfdata_leovig"+nodeMain.fileStoredDetails.get(identifierFile));
+		                	fileInputStream = new FileInputStream(file);
+		                	messToSend = "CLOSESTSERVER "+typeOfOperation+" "+fileNodeDetails.getIpAddress()+":"+fileNodeDetails.getPort()
+		                            +" "+fileNodeDetails.getIdentifier()+" "+pathTravelled+" "+filename+" "+identifierFile+" FILEFOUND "+ ++hopCount;
+		                	
+		                	destinationFound = true;
+		                	
+	                    }catch(FileNotFoundException e){
+	                    	
+	                    	filenotFound = true;
+	                    	messToSend = "CLOSESTSERVER "+ typeOfOperation+ " "+fileNodeDetails.getIpAddress()+":"+fileNodeDetails.getPort()
+		                            +" "+fileNodeDetails.getIdentifier()+" "+pathTravelled+" "+filename+" "+identifierFile+" FILENOTFOUND " + ++hopCount;
+	                    	log.error("File not found in the destination. So send message to the client. ");
+	                    	
+	                    }
+	                    
+	                    try {
+	                        nodeSocket = getNodeSocket(storeIPToSend, storePortToSend);
+	                        destinationFound = true;
+	                        sendDataToDestination(nodeSocket,messToSend);
+	                        
+	                    } catch (IOException e) {
+	                        System.out.println("Exception occued when trying to get datastore socket");
+	                        e.printStackTrace();
+	                    }
+	                    
+	                    
+	                    
+	                    // send the file to that guy if the file is found. If not dont go here.
+	                    while(!filenotFound){
+	                    
+		                    int fileSize=0; 
+		                	byte[] fileByte=null;
+		                	
+		                    try{
+		                        
+		                        fileSize = (int)file.length();
+		                        fileByte = new byte[(int) fileSize];
+		                        int numberRead = fileInputStream.read(fileByte, 0, fileSize);
+		                        
+		                        // Send the actual File.
+		                        
+		                        DataOutputStream dataOutputStream = new DataOutputStream(nodeSocket.getOutputStream());
+		                        dataOutputStream.writeInt(fileSize);
+		                        dataOutputStream.write(fileByte,0,fileSize);
+		                        dataOutputStream.flush();
+		                        filenotFound = true;
+		                          
+		                    }catch (IOException e){
+		                        log.error("Exceptin occured when reading from a file.");
+		                        e.printStackTrace();
+		                        break;
+		                    }
+	                    }
+	                    
+	
+	                }else{
+	                    log.info("Forward the Retreival message to the closest node. ");
+	                    System.out.println("self node details --"+selfNodeDetails.getIdentifier());
+	                    pathTravelled = pathTravelled+"=>"+selfNodeDetails.getIdentifier();
+	                    System.out.println("Path travelled : "+pathTravelled);
+	
+	                    messToSend = "GETNODE "+typeOfOperation+" "+identifierFile+" "+filename+" "+storeIPToSend+" "+storePortToSend+" "+pathTravelled+" "+ ++hopCount;
+	                    try {
+	                        nodeSocket = getNodeSocket(fileNodeDetails.getIpAddress(), fileNodeDetails.getPort());
+	                        destinationFound = true;
+	                        
+	                        sendDataToDestination(nodeSocket,messToSend);
+	                        
+	                    } catch (IOException e) {
+	                        
+	                    		                    	
+	                    	log.error("Exception occurred when trying to send FILESAVE to Node.");
+	                    	log.error("Node might be deleted. So remove it from the routing table and send the request again.");
+                            
+                            // Delete the entry from the routing table.
+                            
+                            for(int i=0;i<4;i++){
+                            	
+                            	for(int j=0;j<16;j++){
+                            		
+                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier()!=null){
+	                            		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(fileNodeDetails.getIdentifier())){
+	                            			
+	                            			log.info("Routing table entry prent for deleting . So removing it. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+	                            			nodeMain.routingTable.get(i).set(j, returnNullNodeDetails());
+	                            			
+	                            		}
+                            		}
+                            		
+                            	}
+                            	
+                            }
+	                    	
+	                    	
+	                    	continue;
+	                    	
+	                    }
+	
+	                }
+	            }
+	            
+	            
 
             }
-            try {
-
-                sendDataToDestination(nodeSocket,messToSend);
-
-            } catch (IOException e) {
-                System.out.println("Exception occured when trying to send the message to Node.");
-                e.printStackTrace();
-            }
+            
 
 
 
@@ -589,6 +752,7 @@ public class NodeServer implements  Runnable{
                 byte[] data = new byte[messageLength];
                 dataInputStream.readFully(data, 0, messageLength);
                 System.out.println("File name received "+fileName);
+                //String newFileNameRcvd = "/tmp/hsperfdata_leovig"+fileName;
                 File newFileName = new File("/tmp/hsperfdata_leovig"+fileName);
 
                 if(!newFileName.exists()){
@@ -609,6 +773,12 @@ public class NodeServer implements  Runnable{
         }
 
 
+    }
+    
+    private NodeDetails returnNullNodeDetails(){
+    	
+    	return new NodeDetails(null, 0, null, null);
+    	
     }
 
     private byte[] convertFileToByteArray(String fileName) throws IOException{
@@ -640,6 +810,7 @@ public class NodeServer implements  Runnable{
 
 
         ArrayList<String> alreadySent = new ArrayList<String>();
+        Set<String> removeAddress = new HashSet<String>();
 
         for(int i=0;i<4;i++){
 
@@ -668,9 +839,13 @@ public class NodeServer implements  Runnable{
 
                             alreadySent.add(nodeDetailsTemp.getIdentifier());
                         } catch (IOException e) {
-                            log.error("Exception occured when trying to get node socket.");
-                            e.printStackTrace();
+                            log.info("Node is down. So cannot send the routing table to him.  Will remove form the routing table.");
+                            
+                            // Remove it from my routing table.
+                            removeAddress.add(nodeDetailsTemp.getIdentifier());
+                            
                         }
+
 
                     }
 
@@ -678,10 +853,33 @@ public class NodeServer implements  Runnable{
 
 
             }
-
-
         }
-
+        
+        if(removeAddress.size()!=0){
+        	
+        	Iterator<String> itr= removeAddress.iterator();
+	    	while(itr.hasNext()){
+	    		String tempValue = itr.next();
+	    		
+		    	System.out.println("Value to be removed . "+tempValue);
+		        for(int i=0;i<4;i++){
+		        	
+		        	for(int j=0;j<16;j++){
+		        		
+		        		if(nodeMain.routingTable.get(i).get(j).getIdentifier().equals(tempValue)){
+		        			
+		        			log.info("Remove routing table entry for sendin the routing table updates. "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+		        			nodeMain.routingTable.get(i).set(j, null);
+		        			log.info("Entry after deleing : "+nodeMain.routingTable.get(i).get(j).getIdentifier());
+		        			
+		        		}
+		        		
+		        	}
+		        }
+        	}
+        	
+        
+        }
 
 
     }
@@ -769,6 +967,8 @@ public class NodeServer implements  Runnable{
                     String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
                     String closestMatch = closestMatch(newIdentifierRec,closestMatchLeafSet,selfNodeDetails.getIdentifier());
 
+                    
+                    
                     if(closestMatch.equals(selfNodeDetails.getIdentifier())){
                         log.info("I am the closest match. I need to place it.");
                         nodedetailsTemp = selfNodeDetails;
@@ -796,7 +996,9 @@ public class NodeServer implements  Runnable{
 
             String closestMatchLeafSet = closestMatch(newIdentifierRec,left,right);
             String closestMatch = closestMatch(newIdentifierRec,closestMatchLeafSet,selfNodeDetails.getIdentifier());
-
+            
+            System.out.println("value of closest Math "+closestMatch);
+            
             if(closestMatch.equals(selfNodeDetails.getIdentifier())){
                 log.info("I am the closest match. I need to place it.");
                 nodedetailsTemp = selfNodeDetails;
@@ -831,16 +1033,17 @@ public class NodeServer implements  Runnable{
         int reversrRight = nodeRigh - Integer.parseInt("FFFF", 16);
         int second = Math.min(Math.abs(nodeRigh), Math.abs(reversrRight));
 
-        log.info("	 " + first + " Min second " + second);
+        log.info("	First " + first + " Second " + second);
 
         if (first < second) {
+        	
             return left;
 
         } else if (first > second) {
-            return right;
+        	
+        	return right;
         } else {
-
-            if (leftNum < nodeRigh) {
+        	if (leftNum < rightNum) {
                 return right;
             }
             return left;

@@ -26,9 +26,10 @@ public class Discovery implements Runnable{
 
         byte[] data=null;
         try {
-            DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+            
+        	DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
             int messageLength = dataInputStream.readInt();
-            System.out.println(messageLength);
+            
             data = new byte[messageLength];
             dataInputStream.readFully(data, 0, messageLength);
         }catch (IOException e){
@@ -44,7 +45,7 @@ public class Discovery implements Runnable{
         if(requestType.equals("REG")){
 
             String ipAddress = tokens[1].trim();
-            int port = Integer.parseInt(tokens[2].trim());
+            int port = Integer.parseInt(tokens[2].trim());	
             String nickName = tokens[3].trim();
             String identifier=tokens[4].trim();
 

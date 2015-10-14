@@ -48,7 +48,7 @@ public class NodeClient implements  Runnable{
                         System.out.println("Please enter a valid number");
                     }
                     input = scanner.nextInt();
-                }while (input<1 || input>3);
+                }while (input<1 || input>4);
             }catch (Exception e){
                 System.out.println("Enter a valid Number");
             }
@@ -149,6 +149,7 @@ public class NodeClient implements  Runnable{
                         Iterator<String> itr2 = fileKeys.iterator();
                         while (itr2.hasNext()){
                             String hashIdentifier = itr2.next();
+                            String fileName = nodeMain.fileStoredDetails.get(hashIdentifier);
 
                             String leftNodeIdentifier = nodeMain.leafLeft.getIdentifier();
                             String rightNodeIdentifier = nodeMain.leafRight.getIdentifier();
@@ -156,12 +157,16 @@ public class NodeClient implements  Runnable{
                             String closestValue = closestMatch(hashIdentifier,leftNodeIdentifier,rightNodeIdentifier);
 
                             // prepare to send the data.
-                            File file = new File(StoreDataStart.fileName);
+                            File file = new File(fileName);
                             FileInputStream fileInputStream = null;
+                            
+                            System.out.println("File name in the stored database :  "+fileName);
+                            
                             try {
                                 fileInputStream = new FileInputStream(file);
                             }catch (IOException e){
                                 log.error("Exception occured when trying to get the stream.");
+                                e.printStackTrace();
                             }
 
                             int fileSize = (int)file.length();
@@ -216,7 +221,14 @@ public class NodeClient implements  Runnable{
                                     e.printStackTrace();
                                 }
                             }
-
+                            	
+                            
+                            // Delete the place were i
+                            
+                            File fileToBeDeleted = new File("/tmp/hsperfdata_leovig/"+fileName);
+                            
+                            fileToBeDeleted.delete();
+                            
                         }
 
 

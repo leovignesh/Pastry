@@ -62,9 +62,9 @@ public class DiscoveryRegisterNode implements  Runnable{
 
 
          //Testing remove it.
-        if(identifier.equals("1600")){
+        if(identifier.equals("0239")){
 
-            messToSend = "REGSUCCESS 1 " + "129.82.46.193:4567 augusta 1000";
+            messToSend = "REGSUCCESS 1 " + "129.82.46.208:4567 frankfort 0200";
 
         }else if(identifier.equals("1234")){
             messToSend = "REGSUCCESS 1 " + "129.82.46.190:4567 augusta 2000";

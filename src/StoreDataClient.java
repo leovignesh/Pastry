@@ -2,6 +2,8 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 /**
@@ -45,7 +47,7 @@ public class StoreDataClient implements Runnable{
 
         System.out.println("***********Please enter the option************");
         System.out.println("1, Upload a File to the system :");
-        System.out.println("1, Retrieve a File from the system :");
+        System.out.println("2, Retrieve a File from the system :");
 
 
         Scanner scanner = new Scanner(System.in);
@@ -82,7 +84,7 @@ public class StoreDataClient implements Runnable{
                 if(fileNameSplit.length>1){
                     StoreDataStart.hashFileName = fileNameSplit[1].trim();
                 }else{
-                	StoreDataStart.hashFileName = computeCheckSum();
+                	StoreDataStart.hashFileName = computeHex(StoreDataStart.fileName);
                 }
 
                 System.out.println("hashfilename .."+StoreDataStart.hashFileName);
@@ -97,10 +99,12 @@ public class StoreDataClient implements Runnable{
                 String fileDetailsToRetrieve = scanner.nextLine();
 
                 String[] fileDetailsRetSplit = fileDetailsToRetrieve.split(" ");
-                String fileNameRet = fileDetailsRetSplit[0].trim();
+                StoreDataStart.fileName = fileDetailsRetSplit[0].trim();
 
                 if(fileDetailsRetSplit.length>1){
                 	StoreDataStart.hashFileName = fileDetailsRetSplit[1].trim();
+                }else{
+                	StoreDataStart.hashFileName = computeHex(StoreDataStart.fileName);
                 }
 
                 getClosestServer("FILERET");
@@ -111,10 +115,30 @@ public class StoreDataClient implements Runnable{
 
     }
 
-    public String computeCheckSum(){
-        //TODO
-
-        return "ABCD";
+    public String computeHex(String fileName){
+    
+    	MessageDigest md;
+    	String hexValue =null;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+			byte[] tempArray = fileName.getBytes();
+	    	hexValue = convertByteArrayToHex(md.digest(tempArray));
+		} catch (NoSuchAlgorithmException e) {
+			log.error("Exception occured when trying to compute hex using SHA1");
+		}
+    	System.out.println("hex value "+hexValue+" last four "+hexValue.substring(hexValue.length()-4,hexValue.length()));
+    	
+    	return hexValue.substring(hexValue.length()-4,hexValue.length());
+    	
+    }
+    
+    private String convertByteArrayToHex(byte[] bytes){
+        StringBuffer stringBuffer = new StringBuffer();
+        for (int i = 0; i < bytes.length; i++) {
+            stringBuffer.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16)
+                    .substring(1));
+        }
+        return stringBuffer.toString();
     }
 
     private void getRandomIP(){
@@ -146,7 +170,7 @@ public class StoreDataClient implements Runnable{
     private void getClosestServer(String type){
 
         getRandomIP();
-        String messToSend = "GETNODE "+type+" "+StoreDataStart.hashFileName+" "+selfIP+" "+selfPort+" "+"Start=>";
+        String messToSend = "GETNODE "+type+" "+StoreDataStart.hashFileName+" "+StoreDataStart.fileName+" "+selfIP+" "+selfPort+" "+"Start"+" 0";
         try {
             socket = getSocket(randomIp,randomPort);
             sendDataToDestination(socket,messToSend);
